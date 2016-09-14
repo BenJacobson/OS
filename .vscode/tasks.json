@@ -1,0 +1,27 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "0.1.0",
+  "command": "make",
+  "isShellCommand": true,
+  "args": [],
+  "showOutput": "always",
+  "tasks": [
+    {
+      "taskName": "Make All",
+      "args": ["all"],
+      "suppressTaskName": true,
+      "isBuildCommand": true
+    },
+    {
+      "taskName": "Make Debug",
+      "args": ["debug"],
+      "suppressTaskName": true
+    },
+    {
+      "taskName": "Make Clean",
+      "args": ["clean"],
+      "suppressTaskName": true
+    }
+  ]
+}

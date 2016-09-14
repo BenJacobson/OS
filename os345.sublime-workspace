@@ -1,0 +1,700 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"tas",
+				"taskID"
+			],
+			[
+				"print",
+				"printQueue"
+			],
+			[
+				"enqu",
+				"enqueueTask"
+			],
+			[
+				"read",
+				"readyQueue"
+			],
+			[
+				"dequeue",
+				"dequeueTask"
+			],
+			[
+				"nex",
+				"nextTask"
+			],
+			[
+				"cre",
+				"createSemaphore"
+			],
+			[
+				"tics",
+				"tics10secs"
+			],
+			[
+				"old",
+				"oldTime10"
+			],
+			[
+				"ol",
+				"oldTime10"
+			],
+			[
+				"curr",
+				"currentTime"
+			],
+			[
+				"time",
+				"time_t"
+			],
+			[
+				"M",
+				"MAX_TASKS"
+			],
+			[
+				"ta",
+				"taskID"
+			],
+			[
+				"pr",
+				"priority"
+			],
+			[
+				"rea",
+				"readyQueue"
+			],
+			[
+				"ne",
+				"nextTask"
+			],
+			[
+				"myS",
+				"mySIGTSTP"
+			],
+			[
+				"new",
+				"newArgc"
+			],
+			[
+				"def",
+				"defaultSigTstpHandler"
+			],
+			[
+				"mt",
+				"mySIGTSTP"
+			],
+			[
+				"cur",
+				"curTask"
+			],
+			[
+				"task",
+				"taskId"
+			],
+			[
+				"cmdB",
+				"CMDBUF_SIZE-1"
+			],
+			[
+				"CMD",
+				"CMDBUF_SIZE-1"
+			],
+			[
+				"inb",
+				"inBufIndx"
+			],
+			[
+				"inB",
+				"inBuffer"
+			],
+			[
+				"SIZE",
+				"INBUF_SIZE"
+			],
+			[
+				"newA",
+				"newArgv"
+			],
+			[
+				"sch",
+				"scheduler"
+			],
+			[
+				"ma",
+				"malloc"
+			],
+			[
+				"newAr",
+				"newArgv"
+			],
+			[
+				"cmd",
+				"cmdBufIndx"
+			],
+			[
+				"in",
+				"inBufIndx"
+			],
+			[
+				"pri",
+				"printPrompt"
+			],
+			[
+				"str",
+				"strtol"
+			],
+			[
+				"I",
+				"INBUF_SIZE"
+			],
+			[
+				"P1_p",
+				"P1_printArgs"
+			],
+			[
+				"strc",
+				"strcpy"
+			],
+			[
+				"os345",
+				"os345fat"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "src/os345.c",
+			"settings":
+			{
+				"buffer_size": 13952,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "src/os345config.h",
+			"settings":
+			{
+				"buffer_size": 2981,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "src/os345interrupts.c",
+			"settings":
+			{
+				"buffer_size": 8126,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "src/os345tasks.c",
+			"settings":
+			{
+				"buffer_size": 5820,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "src/os345p1.c",
+			"settings":
+			{
+				"buffer_size": 13386,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "src/os345semaphores.c",
+			"settings":
+			{
+				"buffer_size": 7674,
+				"line_ending": "Windows"
+			}
+		}
+	],
+	"build_system": "os345",
+	"build_system_choices":
+	[
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				]
+			],
+			[
+				"Packages/C++/C++ Single File.sublime-build",
+				"Run"
+			]
+		],
+		[
+			[
+				[
+					"os345",
+					""
+				],
+				[
+					"os345",
+					"Run"
+				]
+			],
+			[
+				"os345",
+				"Run"
+			]
+		]
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 980.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"",
+				"Changelog"
+			],
+			[
+				"grep",
+				"Set Syntax: Regular Expression"
+			]
+		],
+		"width": 1080.0
+	},
+	"console":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src"
+	],
+	"file_history":
+	[
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345.h",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345signals.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345signals.h",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345tasks.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345semaphores.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345p2.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345interrupts.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345p1.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345lc3.h",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345config.h",
+		"/C/Users/BenTJ/Documents/Projects/WymountSniper/availableapartment.html",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/compile.bat",
+		"/C/Users/BenTJ/Documents/Classes/ECEn425/HW1/HW1.txt",
+		"/C/Users/BenTJ/AppData/Roaming/Sublime Text 3/Packages/User/Default (Windows).sublime-keymap",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/os345.sublime-project",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/run.bat",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/os345.sublime-build",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345park.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345park.h",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345fat.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345fat.h",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345lc3.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345mmu.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345p4.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345p3.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345p5.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/src/os345p6.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/os345semaphores.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/os345signals.h",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/os345p1.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/os345.h",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/os345fat.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/os345fat.h",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/os345.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/Test/test.c",
+		"/C/Users/BenTJ/Documents/Classes/CS345/Test/run.bat",
+		"/C/Users/BenTJ/Documents/Classes/CS345/Test/compile.bat",
+		"/C/Users/BenTJ/Documents/Classes/CS345/OS/os345config.h"
+	],
+	"find":
+	{
+		"height": 80.0
+	},
+	"find_in_files":
+	{
+		"height": 220.0,
+		"where_history":
+		[
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": true,
+		"find_history":
+		[
+			";\n",
+			"printQueue",
+			"enqueueTask",
+			"S_READY",
+			"tics1sec",
+			"oldTime",
+			"taskId",
+			"rq",
+			"MED_PRIORITY",
+			"pollInterrupts",
+			"S_BLOCKED",
+			"sigAction",
+			"killTask",
+			"TCB",
+			"sysKillTask",
+			"TCB",
+			"pollInterrupts",
+			"scheduler()",
+			"schedule",
+			"rq",
+			"ready queue",
+			"curTask",
+			"TCB",
+			"swapTask",
+			"queue",
+			"dispatcher",
+			"New Task",
+			"createTask",
+			"cmdBufIndx",
+			"createTask",
+			"INBUF_SIZE",
+			"inBufIndx",
+			"swapCount",
+			"INBUF_SIZE",
+			"MAX_ARGS",
+			"inBufferReady",
+			"mySigIntHandler",
+			"sigAction",
+			"\nextern",
+			"NUM_COMMANDS",
+			"createSemaphore",
+			"P1_shellTask",
+			"_creat",
+			"_create"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"taskID"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 3,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "src/os345.c",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 13952,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								13718,
+								13718
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 14423.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "src/os345config.h",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2981,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								185,
+								185
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "src/os345interrupts.c",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 8126,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								5632,
+								5632
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 5356.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "src/os345tasks.c",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5820,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								5039,
+								5039
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 4563.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "src/os345p1.c",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 13386,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								4826,
+								4826
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 4040.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "src/os345semaphores.c",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 7674,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2567,
+								2567
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1412.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 41.0
+	},
+	"input":
+	{
+		"height": 69.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 375.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "os345",
+	"project": "os345.sublime-project",
+	"replace":
+	{
+		"height": 150.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"bat",
+				"C:\\Users\\BenTJ\\Documents\\Classes\\CS345\\OS\\run.bat"
+			],
+			[
+				"os345",
+				"C:\\Users\\BenTJ\\Documents\\Classes\\CS345\\OS\\src\\os345.c"
+			],
+			[
+				"sema",
+				"C:\\Users\\BenTJ\\Documents\\Classes\\CS345\\OS\\src\\os345semaphores.c"
+			],
+			[
+				"",
+				"C:\\Users\\BenTJ\\Documents\\Classes\\CS345\\OS\\src\\os345p6.c"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 980.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"",
+				"ADDI_MSG"
+			]
+		],
+		"width": 980.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 589.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

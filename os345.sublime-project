@@ -1,0 +1,21 @@
+{
+	"folders":
+	[
+		{
+			"path": "."
+		}
+	],
+	"build_systems":
+    [
+        {
+			"name": "os345",
+            "cmd": ["compile.bat"],
+            "working_dir": "C:\\Users\\BenTJ\\Documents\\Classes\\CS345\\OS",
+			"variants": [{
+				"name": "Run",
+				"shell": true,
+				"cmd": ["start", "cmd.exe", "/k", "os345.exe"]
+			}]
+        }
+    ]
+}
