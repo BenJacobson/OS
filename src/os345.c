@@ -378,9 +378,8 @@ static int initOS()
 	diskMounted = 0;					// disk has been mounted
 
 	// malloc ready queue
-	readyQueue = (int*)malloc(MAX_TASKS * sizeof(int));
+	readyQueue = newPQueue(MAX_TASKS);
 	if (readyQueue == NULL) return 99;
-	for (i=0; i<MAX_TASKS; i++) readyQueue[i] = -1;
 
 	// capture current time
 	lastPollClock = clock();			// last pollClock
@@ -432,44 +431,3 @@ void powerDown(int code)
 	RESTORE_OS
 	return;
 } // end powerDown
-
-
-// **********************************************************************
-// **********************************************************************
-// Queue functions
-
-// **********************************************************************
-// **********************************************************************
-// enqueue
-int enqueueTask(PQueue pqueue, TID taskID) {
-	for (int i = 0; i < MAX_TASKS; i++) {
-		if (pqueue[i] == -1) {
-			pqueue[i] = taskID;
-			return 0;			
-		}
-	}
-	return -1;
-}
-
-// **********************************************************************
-// **********************************************************************
-// dequeue
-int dequeueTask(PQueue pqueue) {
-	int i, taskIndex = -1;
-	TID taskID = -1;
-	Priority taskPriority = -1;
-	for (i = 0; i < MAX_TASKS; i++) {
-		if (pqueue[i] != -1 && tcb[pqueue[i]].priority > taskPriority) {
-			taskIndex = i;
-			taskID = pqueue[i];
-			taskPriority = tcb[pqueue[i]].priority;
-		}
-	}
-	if (taskIndex != -1) {
-		for (i = taskIndex; i < MAX_TASKS-1; i++) {
-			pqueue[i] = pqueue[i+1];
-		}
-	}
-	pqueue[MAX_TASKS-1] = -1;		// set the last task to empty to cover the case when you dequeue a full PQueue
-	return taskID;
-}

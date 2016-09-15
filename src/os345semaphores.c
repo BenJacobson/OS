@@ -25,17 +25,14 @@
 #include <assert.h>
 
 #include "os345.h"
-
+#include "os345pqueue.h"
 
 extern TCB tcb[];								// task control block
 extern int curTask;								// current task #
+extern PQueue readyQueue;
 
 extern int superMode;							// system mode
 extern Semaphore* semaphoreList;				// linked list of active semaphores
-
-extern int enqueueTask(int* queue, int taskID);	// adds task to a queue
-extern int* readyQueue;							// queue of tasks ready for execution time
-
 
 // **********************************************************************
 // **********************************************************************
@@ -103,9 +100,7 @@ temp:	// ?? temporary label
 		if (s->state == 0) {
 			tcb[curTask].event = s;		// block task
 			tcb[curTask].state = S_BLOCKED;
-
-			// ?? move task from ready queue to blocked queue
-
+			enqueueTask(s->blockedQueue, curTask);
 			swapTask();						// reschedule the tasks
 			return 1;
 		}
@@ -193,15 +188,16 @@ extern Semaphore* createSemaphore(char* name, int type, int state) {
 
 	// set semaphore values
 	sem->name = (char*)malloc(strlen(name)+1);
-	strcpy(sem->name, name);				// semaphore name
-	sem->type = type;							// 0=binary, 1=counting
-	sem->state = state;						// initial semaphore state
-	sem->taskNum = curTask;					// set parent task #
+	strcpy(sem->name, name);							// semaphore name
+	sem->type = type;									// 0=binary, 1=counting
+	sem->state = state;									// initial semaphore state
+	sem->taskNum = curTask;								// set parent task #
+	sem->blockedQueue = newPQueue(MAX_TASKS);			// allocate space for blocked queue
 
 	// prepend to semaphore list
 	sem->semLink = (struct semaphore*)semaphoreList;
-	semaphoreList = sem;						// link into semaphore list
-	return sem;									// return semaphore pointer
+	semaphoreList = sem;								// link into semaphore list
+	return sem;											// return semaphore pointer
 } // end createSemaphore
 
 

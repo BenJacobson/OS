@@ -21,6 +21,7 @@
 #include <ctype.h>
 #include <setjmp.h>
 #include <assert.h>
+
 #include "os345.h"
 #include "os345lc3.h"
 #include "os345fat.h"

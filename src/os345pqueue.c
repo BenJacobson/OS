@@ -16,7 +16,12 @@
 // **   DISCLAMER ** DISCLAMER ** DISCLAMER ** DISCLAMER ** DISCLAMER   **
 // ***********************************************************************
 
-typedef int* PQueue;					// Priority Queue
+#include <setjmp.h>
+
+#include "os345.h"
+#include "os345pqueue.h"
+
+extern TCB tcb[];
 
 // **********************************************************************
 // **********************************************************************
@@ -26,6 +31,7 @@ typedef int* PQueue;					// Priority Queue
 // **********************************************************************
 // enqueue
 int enqueueTask(PQueue pqueue, TID taskID) {
+	assert("Positive taskID" && taskID > 0);
 	for (int i = 0; i < MAX_TASKS; i++) {
 		if (pqueue[i] == -1) {
 			pqueue[i] = taskID;
@@ -38,7 +44,7 @@ int enqueueTask(PQueue pqueue, TID taskID) {
 // **********************************************************************
 // **********************************************************************
 // dequeue
-int dequeueTask(PQueue pqueue) {
+TID dequeueTask(PQueue pqueue) {
 	int i, taskIndex = -1;
 	TID taskID = -1;
 	Priority taskPriority = -1;
@@ -56,4 +62,15 @@ int dequeueTask(PQueue pqueue) {
 	}
 	pqueue[MAX_TASKS-1] = -1;		// set the last task to empty to cover the case when you dequeue a full PQueue
 	return taskID;
+}
+
+// **********************************************************************
+// **********************************************************************
+// new PQueue
+PQueue newPQueue(int size) {
+	assert("Positive PQueue size" && size > 0);
+    PQueue pqueue = (PQueue)malloc(size * sizeof(int));
+	for (int i=0; i<MAX_TASKS; i++)
+		pqueue[i] = -1;
+	return pqueue;
 }

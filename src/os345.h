@@ -69,16 +69,16 @@ enum {PAGE_INIT, PAGE_READ, PAGE_OLD_WRITE, PAGE_NEW_WRITE,
 typedef int bool;						// boolean value
 typedef int TID;						// task id
 typedef int Priority;					// task priority
-typedef int* PQueue;					// Priority Queue
 
 // semaphore
-typedef struct semaphore				// semaphore
+typedef struct							// semaphore
 {
 	struct semaphore* semLink;			// semaphore link
 	char* name;							// semaphore name
 	int state;							// semaphore state
 	int type;							// semaphore type
 	int taskNum;						// semaphore creator task #
+	/*PQueue*/ int* blockedQueue;		// priority queue of tasks blocked by semaphore
 } Semaphore;
 
 // task control block

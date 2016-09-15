@@ -258,7 +258,7 @@ int tenSecondTask(int argc, char* argv[])
 	while (1)
 	{
 		semWait(tics10secs);
-		char curTime[10];
+		char curTime[30];
 		myTime(curTime);
 		printf("\n(%d) Current Time: %s", curTask, curTime);
 	}
