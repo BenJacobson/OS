@@ -139,8 +139,6 @@ static void keyboard_isr() {
 
 			case CTRL_W:
 			{
-				printf("%c", CR);
-				break;
 				sigSignal(-1, mySIGTSTP);
 				break;
 			}
@@ -179,7 +177,7 @@ static void keyboard_isr() {
 					{
 						if (cmdBufIndx >= 0) {
 							// erase line
-							printf("%c", CR);
+							putchar(CR);
 							printPrompt();
 							for (int i=strlen(inBuffer); i >= 0; i--) printf(" ");
 							// load command
@@ -192,9 +190,9 @@ static void keyboard_isr() {
 								*inBuffer = 0;
 							}
 							// print line
-							printf("%c", CR);
+							putchar(CR);
 							printPrompt();
-							printf(inBuffer);
+							puts(inBuffer);
 						}
 						break;
 					}
@@ -203,16 +201,16 @@ static void keyboard_isr() {
 					{
 						if (cmdBufIndx < CMDBUF_SIZE-1 && cmdBuffer[cmdBufIndx+1] != 0) {
 							// erase line
-							printf("%c", CR);
+							putchar(CR);
 							printPrompt();
 							for (int i=strlen(inBuffer); i >= 0; i--) printf(" ");
 							// load command
 							strcpy(inBuffer, cmdBuffer[++cmdBufIndx]);
 							inBufIndx = strlen(inBuffer);
 							// print line
-							printf("%c", CR);
+							putchar(CR);
 							printPrompt();
-							printf(inBuffer);
+							puts(inBuffer);
 						}
 						break;
 					}
@@ -232,12 +230,12 @@ static void keyboard_isr() {
 					for (int cpyIndx = inBufIndx; cpyIndx < INBUF_SIZE && inBuffer[cpyIndx] != 0; cpyIndx++)
 						inBuffer[cpyIndx] = inBuffer[cpyIndx+1];
 					// clear line
-					printf("%c", CR);
+					putchar(CR);
 					printPrompt();
 					printf("%s", inBuffer);
 					printf(" ");
 					// print correct line
-					printf("%c", CR);
+					putchar(CR);
 					printPrompt();
 					printf("%s", inBuffer);
 				}
@@ -268,7 +266,7 @@ static void keyboard_isr() {
 					inBuffer[inBufIndx++] = inChar;
 					inBuffer[bufLen+1] = 0;
 					// print correct line
-					printf("%c", CR);
+					putchar(CR);
 					printPrompt();
 					printf("%s", inBuffer);
 					// printf("%x", inChar);	// echo key code

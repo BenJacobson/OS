@@ -32,15 +32,17 @@
 static Semaphore* s1Sem;					// task 1 semaphore
 static Semaphore* s2Sem;					// task 2 semaphore
 
-extern TCB tcb[];								// task control block
+extern TCB tcb[];							// task control block
 extern int curTask;							// current task #
 extern Semaphore* semaphoreList;			// linked list of active semaphores
+extern Semaphore* tics10secs;				// 10 seconds semaphore
 extern jmp_buf reset_context;				// context of kernel stack
 
 // ***********************************************************************
 // project 2 functions and tasks
 
 int signalTask(int, char**);
+int tenSecondTask(int, char**);
 int ImAliveTask(int, char**);
 
 // ***********************************************************************
@@ -50,7 +52,9 @@ int P2_project2(int argc, char* argv[])
 {
 	static char* s1Argv[] = {"signal1", "s1Sem"};
 	static char* s2Argv[] = {"signal2", "s2Sem"};
+	static char* tenSecondsArgv[] = {"Ten Seconds", "3"};
 	static char* aliveArgv[] = {"I'm Alive", "3"};
+	int i;
 
 	printf("\nStarting Project 2");
 	SWAP;
@@ -68,17 +72,22 @@ int P2_project2(int argc, char* argv[])
 					2,						// task argc
 					s2Argv);				// task argument pointers
 
-	createTask("I'm Alive",					// task name
-					ImAliveTask,			// task
-					LOW_PRIORITY,			// task priority
+	for (i = 0; i < 9; i++) {
+		createTask("Ten Seconds",			// task name
+					tenSecondTask,			// task
+					HIGH_PRIORITY,			// task priority
 					2,						// task argc
-					aliveArgv);				// task argument pointers
+					tenSecondsArgv);		// task argument pointers
+	}
 
-	createTask("I'm Alive",					// task name
+	for (i = 0; i < 2; i++) {
+		createTask("I'm Alive",				// task name
 					ImAliveTask,			// task
 					LOW_PRIORITY,			// task priority
 					2,						// task argc
 					aliveArgv);				// task argument pointers
+	}
+
 	return 0;
 } // end P2_project2
 
@@ -240,6 +249,21 @@ int signalTask(int argc, char* argv[])
 	return 0;						// terminate task
 } // end signalTask
 
+
+// ***********************************************************************
+// ***********************************************************************
+// Ten second task
+int tenSecondTask(int argc, char* argv[])
+{
+	while (1)
+	{
+		semWait(tics10secs);
+		char curTime[10];
+		myTime(curTime);
+		printf("\n(%d) Current Time: %s", curTask, curTime);
+	}
+	return 0;						// terminate task
+} // end tenSecondTask
 
 
 // ***********************************************************************

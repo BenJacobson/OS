@@ -159,7 +159,7 @@ int getAvailableFrame()
 
 // **************************************************************************
 // read/write to swap space
-int accessPage(int pnum, int frame, int rwnFlg)
+long accessPage(int pnum, int frame, int rwnFlg)
 {
 	static int nextPage;						// swap page size
 	static int pageReads;						// page reads
@@ -192,7 +192,7 @@ int accessPage(int pnum, int frame, int rwnFlg)
 			return pageWrites;
 
 		case PAGE_GET_ADR:                    	// return page address
-			return (int)(&swapMemory[pnum<<6]);
+			return (long)(&swapMemory[pnum<<6]);
 
 		case PAGE_NEW_WRITE:                   // new write (Drops thru to write old)
 			pnum = nextPage++;

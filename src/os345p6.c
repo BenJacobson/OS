@@ -300,7 +300,7 @@ int P6_mount(int argc, char* argv[])		// mount RAM disk
 	printf("\n           FAT sectors: %d", bootSector.BPB_FATSz16);		// FAT sectors (should be 9)
 	printf("\n         Sectors/track: %d", bootSector.BPB_SecPerTrk);		// Sectors per cylindrical track
 	printf("\n          Heads/volume: %d", bootSector.BPB_NumHeads);		// Heads per volume (2 for 1.4Mb 3.5" floppy)
-	printf("\n        FAT-32 sectors: %ld", bootSector.BPB_HiddSec);		// Hidden sectors (0 for non-partitioned media)
+	printf("\n        FAT-32 sectors: %u", bootSector.BPB_HiddSec);		// Hidden sectors (0 for non-partitioned media)
 	return 0;
 } // end P6_mount
 
@@ -925,7 +925,7 @@ void checkDirectory(char* dirName, unsigned char fat[], int dir)
 		else
 		{	// check file size
 			if (dirEntry.fileSize > maxSize)
-				printf("\n  File size of %u in file \"%s\" exceeds %u", dirEntry.fileSize, fileName, maxSize);
+				printf("\n  File size of %u in file \"%s\" exceeds %lu", dirEntry.fileSize, fileName, maxSize);
 		}
 	}
 	return;
@@ -1055,7 +1055,7 @@ int fmsTests(int test, bool debug)
 			// write a word to each file, rewind the files (seek to 0), read and print word
 			for (i=0; i<numWords; i++)
 			{
-				if (debug) printf("\n   fmsWriteFile(tFID[%d], \"%s\", %d)", i, text[i], strlen(text[i]));
+				if (debug) printf("\n   fmsWriteFile(tFID[%d], \"%s\", %lu)", i, text[i], strlen(text[i]));
 				try(fmsWriteFile(tFID[i],text[i],strlen(text[i])));
 			}
 			// seek to beginning of files

@@ -218,7 +218,7 @@ typedef int PC;
 void initLC3Memory(int startFrame, int endFrame);
 
 unsigned short int *getMemAdr(int va, int rwFlg);
-int accessPage(int pnum, int frame, int rwnFlg);
+long accessPage(int pnum, int frame, int rwnFlg);
 void setFrameTableBits(int flg, int sf, int ef);
 int getAvailableFrame();
 void outPTE(char* s, int pte);

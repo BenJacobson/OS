@@ -441,13 +441,10 @@ void powerDown(int code)
 // **********************************************************************
 // **********************************************************************
 // enqueue
-int enqueueTask(int* queue, int taskID) {
-	if (taskID != 0) {
-		int x = 0;
-	}
+int enqueueTask(PQueue pqueue, TID taskID) {
 	for (int i = 0; i < MAX_TASKS; i++) {
-		if (queue[i] == -1) {
-			queue[i] = taskID;
+		if (pqueue[i] == -1) {
+			pqueue[i] = taskID;
 			return 0;			
 		}
 	}
@@ -457,30 +454,22 @@ int enqueueTask(int* queue, int taskID) {
 // **********************************************************************
 // **********************************************************************
 // dequeue
-int dequeueTask(int* queue) {
-	int i, taskIndex = -1, taskID = -1, priority = -1;
+int dequeueTask(PQueue pqueue) {
+	int i, taskIndex = -1;
+	TID taskID = -1;
+	Priority taskPriority = -1;
 	for (i = 0; i < MAX_TASKS; i++) {
-		if (queue[i] != -1 && tcb[queue[i]].priority > priority) {
+		if (pqueue[i] != -1 && tcb[pqueue[i]].priority > taskPriority) {
 			taskIndex = i;
-			taskID = queue[i];
-			priority = tcb[queue[i]].priority;
+			taskID = pqueue[i];
+			taskPriority = tcb[pqueue[i]].priority;
 		}
 	}
 	if (taskIndex != -1) {
 		for (i = taskIndex; i < MAX_TASKS-1; i++) {
-			queue[i] = queue[i+1];
+			pqueue[i] = pqueue[i+1];
 		}
 	}
-	if (taskID != 0) {
-		int x = 0;
-	}
-	queue[MAX_TASKS-1] = -1;
+	pqueue[MAX_TASKS-1] = -1;		// set the last task to empty to cover the case when you dequeue a full PQueue
 	return taskID;
-}
-
-void printQueue(int* queue) {
-	printf("\nPrinting queue...");
-	for (int i = 0; i < MAX_TASKS && queue[i] != -1; i++) {
-		printf("\n%s %d", tcb[queue[i]].name, tcb[queue[i]].priority);
-	}
 }
