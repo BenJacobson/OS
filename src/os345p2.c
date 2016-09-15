@@ -56,28 +56,28 @@ int P2_project2(int argc, char* argv[])
 	SWAP;
 
 	// start tasks looking for sTask semaphores
-	createTask("signal1",				// task name
+	createTask("signal1",					// task name
 					signalTask,				// task
-					VERY_HIGH_PRIORITY,	// task priority
-					2,							// task argc
-					s1Argv);					// task argument pointers
+					VERY_HIGH_PRIORITY,		// task priority
+					2,						// task argc
+					s1Argv);				// task argument pointers
 
-	createTask("signal2",				// task name
+	createTask("signal2",					// task name
 					signalTask,				// task
-					VERY_HIGH_PRIORITY,	// task priority
-					2,							// task argc
-					s2Argv);					// task argument pointers
+					VERY_HIGH_PRIORITY,		// task priority
+					2,						// task argc
+					s2Argv);				// task argument pointers
 
-	createTask("I'm Alive",				// task name
+	createTask("I'm Alive",					// task name
 					ImAliveTask,			// task
 					LOW_PRIORITY,			// task priority
-					2,							// task argc
+					2,						// task argc
 					aliveArgv);				// task argument pointers
 
-	createTask("I'm Alive",				// task name
+	createTask("I'm Alive",					// task name
 					ImAliveTask,			// task
 					LOW_PRIORITY,			// task priority
-					2,							// task argc
+					2,						// task argc
 					aliveArgv);				// task argument pointers
 	return 0;
 } // end P2_project2

@@ -117,25 +117,7 @@ static void saveBuffer()
 // **********************************************************************
 // keyboard interrupt service routine
 //
-
-static void upArrowHandler() {
-
-}
-
-static void downArrowHandler() {
-	
-}
-
-static void leftArrowHandler() {
-	
-}
-
-static void rightArrowHandler() {
-	
-}
-
-static void keyboard_isr()
-{
+static void keyboard_isr() {
 	// assert system mode
 	assert("keyboard_isr Error" && superMode);
 
@@ -172,74 +154,75 @@ static void keyboard_isr()
 			}
 
 			// Begin Arrow Key Handling
-			#if GCC == 1
+			#if GCC == 1      // Linux/Unix systems send 3 char codes when an arrow is pressed
 			case BEGIN_ARROW:
 			{
-				GET_CHAR;
+				GET_CHAR;     // Throw away the second character
 				switch (GET_CHAR) {
 			#endif
 
-				case LEFT_ARROW:
-				{
-					if (inBufIndx > 0)
-						inBufIndx--;
-					break;
-				}
+					case LEFT_ARROW:
+					{
+						if (inBufIndx > 0)
+							inBufIndx--;
+						break;
+					}
 
-				case RIGHT_ARROW:
-				{
-					if (inBufIndx < INBUF_SIZE && inBufIndx < strlen(inBuffer))
-						inBufIndx++;
-					break;
-				}
+					case RIGHT_ARROW:
+					{
+						if (inBufIndx < INBUF_SIZE && inBufIndx < strlen(inBuffer))
+							inBufIndx++;
+						break;
+					}
 
-				case DOWN_ARROW:
-				{
-					if (cmdBufIndx >= 0) {
-						// erase line
-						printf("%c", CR);
-						printPrompt();
-						for (int i=strlen(inBuffer); i >= 0; i--) printf(" ");
-						// load command
-						cmdBufIndx--;
+					case DOWN_ARROW:
+					{
 						if (cmdBufIndx >= 0) {
-							strcpy(inBuffer, cmdBuffer[cmdBufIndx]);
-							inBufIndx = strlen(inBuffer);
-						} else {
-							inBufIndx = 0;
-							*inBuffer = 0;
+							// erase line
+							printf("%c", CR);
+							printPrompt();
+							for (int i=strlen(inBuffer); i >= 0; i--) printf(" ");
+							// load command
+							cmdBufIndx--;
+							if (cmdBufIndx >= 0) {
+								strcpy(inBuffer, cmdBuffer[cmdBufIndx]);
+								inBufIndx = strlen(inBuffer);
+							} else {
+								inBufIndx = 0;
+								*inBuffer = 0;
+							}
+							// print line
+							printf("%c", CR);
+							printPrompt();
+							printf(inBuffer);
 						}
-						// print line
-						printf("%c", CR);
-						printPrompt();
-						printf(inBuffer);
+						break;
 					}
-					break;
-				}
 
-				case UP_ARROW:
-				{
-					if (cmdBufIndx < CMDBUF_SIZE-1 && cmdBuffer[cmdBufIndx+1] != 0) {
-						// erase line
-						printf("%c", CR);
-						printPrompt();
-						for (int i=strlen(inBuffer); i >= 0; i--) printf(" ");
-						// load command
-						strcpy(inBuffer, cmdBuffer[++cmdBufIndx]);
-						inBufIndx = strlen(inBuffer);
-						// print line
-						printf("%c", CR);
-						printPrompt();
-						printf(inBuffer);
+					case UP_ARROW:
+					{
+						if (cmdBufIndx < CMDBUF_SIZE-1 && cmdBuffer[cmdBufIndx+1] != 0) {
+							// erase line
+							printf("%c", CR);
+							printPrompt();
+							for (int i=strlen(inBuffer); i >= 0; i--) printf(" ");
+							// load command
+							strcpy(inBuffer, cmdBuffer[++cmdBufIndx]);
+							inBufIndx = strlen(inBuffer);
+							// print line
+							printf("%c", CR);
+							printPrompt();
+							printf(inBuffer);
+						}
+						break;
 					}
-					break;
-				}
 
-			#if GCC == 1
+			#if GCC == 1			// End Linux/Unix arrow key handling
 				}
 				break;
 			}
-			#endif						// End Arrow Key Hndling
+			#endif
+			// End Arrow Key Hndling
 
 			case BACKSPACE:
 			{
