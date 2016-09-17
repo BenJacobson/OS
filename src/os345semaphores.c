@@ -52,19 +52,18 @@ void semSignal(Semaphore* s) {
 		// look through tasks for one suspended on this semaphore
 
 temp:	// ?? temporary label
-		for (i=0; i<MAX_TASKS; i++)	{ // look for suspended task
-			if (tcb[i].event == s) {
-				s->state = 0;				// clear semaphore
-				tcb[i].event = 0;			// clear event pointer
-				tcb[i].state = S_READY;		// unblock task
-				enqueueTask(readyQueue, i);
 
-				// ?? move task from blocked to ready queue
+		if (hasTask(s->blockedQueue)) {
+			int taskID = dequeueTask(s->blockedQueue);
+			s->state = 0;						// clear semaphore
+			tcb[taskID].event = 0;				// clear event pointer
+			tcb[taskID].state = S_READY;		// unblock task
+			enqueueTask(readyQueue, taskID);
 
-				if (!superMode) swapTask();
-				return;
-			}
+			if (!superMode) swapTask();
+			return;
 		}
+
 		// nothing waiting on semaphore, go ahead and just signal
 		s->state = 1;						// nothing waiting, signal
 		if (!superMode) swapTask();

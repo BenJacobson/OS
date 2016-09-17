@@ -81,7 +81,7 @@ int inBufIndx;						// input pointer into input buffer
 char inBuffer[INBUF_SIZE+1];		// character input buffer
 int cmdBufIndx;						// input pointer to command buffer
 char* cmdBuffer[CMDBUF_SIZE];		// previous command buffer
-//Message messages[NUM_MESSAGES];		// process message buffers
+Message messages[NUM_MESSAGES];		// process message buffers
 
 int pollClock;						// current clock()
 int lastPollClock;					// last pollClock

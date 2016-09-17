@@ -17,6 +17,8 @@
 // ***********************************************************************
 
 #include <setjmp.h>
+#include <assert.h>
+#include <stdlib.h>
 
 #include "os345.h"
 #include "os345pqueue.h"
@@ -31,7 +33,7 @@ extern TCB tcb[];
 // **********************************************************************
 // enqueue
 int enqueueTask(PQueue pqueue, TID taskID) {
-	assert("Positive taskID" && taskID > 0);
+	assert("Positive taskID" && taskID >= 0);
 	for (int i = 0; i < MAX_TASKS; i++) {
 		if (pqueue[i] == -1) {
 			pqueue[i] = taskID;
@@ -48,7 +50,7 @@ TID dequeueTask(PQueue pqueue) {
 	int i, taskIndex = -1;
 	TID taskID = -1;
 	Priority taskPriority = -1;
-	for (i = 0; i < MAX_TASKS; i++) {
+	for (i = 0; i < MAX_TASKS && pqueue[i] != -1; i++) {
 		if (pqueue[i] != -1 && tcb[pqueue[i]].priority > taskPriority) {
 			taskIndex = i;
 			taskID = pqueue[i];
@@ -56,7 +58,7 @@ TID dequeueTask(PQueue pqueue) {
 		}
 	}
 	if (taskIndex != -1) {
-		for (i = taskIndex; i < MAX_TASKS-1; i++) {
+		for (i = taskIndex; i < MAX_TASKS-1 && pqueue[i] != -1; i++) {
 			pqueue[i] = pqueue[i+1];
 		}
 	}
@@ -73,4 +75,12 @@ PQueue newPQueue(int size) {
 	for (int i=0; i<MAX_TASKS; i++)
 		pqueue[i] = -1;
 	return pqueue;
+}
+
+
+// **********************************************************************
+// **********************************************************************
+// has task
+bool hasTask(PQueue pqueue) {
+	return pqueue[0] != -1;
 }
