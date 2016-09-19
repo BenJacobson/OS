@@ -34,45 +34,38 @@ extern TCB tcb[];
 // enqueue
 int enqueueTask(PQueue pqueue, TID taskID) {
 	assert("Positive taskID" && taskID >= 0);
-	for (int i = 0; i < MAX_TASKS; i++) {
-		if (pqueue[i] == -1) {
-			pqueue[i] = taskID;
-			return 0;			
+	assert("Queue overflow" && pqueue[0] < MAX_TASKS - 2);
+
+	Priority insertPriority = tcb[taskID].priority;
+	int numTasks = pqueue[0]++;
+	// Find insert position
+	while (numTasks) {
+		pqueue[numTasks+1] = pqueue[numTasks];
+		if (insertPriority > tcb[pqueue[numTasks+1]].priority) {
+			pqueue[numTasks+1] = taskID;
+			return taskID;
 		}
+		numTasks--;
 	}
-	return -1;
+	// insert in lowest spot
+	pqueue[1] = taskID;
+	return taskID;
 }
 
 // **********************************************************************
 // **********************************************************************
 // dequeue
 TID dequeueTask(PQueue pqueue) {
-	int i, taskIndex = -1;
-	TID taskID = -1;
-	Priority taskPriority = -1;
-	for (i = 0; i < MAX_TASKS && pqueue[i] != -1; i++) {
-		if (pqueue[i] != -1 && tcb[pqueue[i]].priority > taskPriority) {
-			taskIndex = i;
-			taskID = pqueue[i];
-			taskPriority = tcb[pqueue[i]].priority;
-		}
-	}
-	if (taskIndex != -1) {
-		for (i = taskIndex; i < MAX_TASKS-1 && pqueue[i] != -1; i++) {
-			pqueue[i] = pqueue[i+1];
-		}
-	}
-	pqueue[MAX_TASKS-1] = -1;		// set the last task to empty to cover the case when you dequeue a full PQueue
-	return taskID;
+	if (pqueue[0])
+		return pqueue[pqueue[0]--];
+	else
+		return -1;
 }
 
 // **********************************************************************
 // **********************************************************************
 // new PQueue
-PQueue newPQueue(int size) {
-	assert("Positive PQueue size" && size > 0);
-    PQueue pqueue = (PQueue)malloc(size * sizeof(int));
-	for (int i=0; i<MAX_TASKS; i++)
-		pqueue[i] = -1;
+PQueue newPQueue() {
+    PQueue pqueue = (PQueue)malloc(MAX_TASKS * sizeof(int));
 	return pqueue;
 }
