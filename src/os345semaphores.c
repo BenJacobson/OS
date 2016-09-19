@@ -54,19 +54,24 @@ void semSignal(Semaphore* s) {
 			tcb[taskID].event = 0;				// clear event pointer
 			tcb[taskID].state = S_READY;		// unblock task
 			enqueueTask(readyQueue, taskID);
-
 			if (!superMode) swapTask();
 			return;
 		}
-
 		// nothing waiting on semaphore, go ahead and just signal
 		s->state = 1;						// nothing waiting, signal
 		if (!superMode) swapTask();
 		return;
 	} else {
 		// counting semaphore
-		// ?? implement counting semaphore
-		assert("Counting semaphore not implemented" && FALSE);
+		(s->state)++;							// clear semaphore		
+		int taskID;
+		if ((taskID = dequeueTask(s->blockedQueue)) >= 0) {
+			tcb[taskID].event = 0;				// clear event pointer
+			tcb[taskID].state = S_READY;		// unblock task
+			enqueueTask(readyQueue, taskID);
+			if (!superMode) swapTask();
+			return;
+		}
 	}
 } // end semSignal
 
@@ -85,12 +90,10 @@ int semWait(Semaphore* s) {
 	assert("semWait Error" && !superMode);											// assert user mode
 
 	// check semaphore type
-	if (s->type == 0) {
+	if (s->type == BINARY) {
 		// binary semaphore
 		// if state is zero, then block task
-
-		if (s->state == 0) {
-			// block task
+		if (s->state == 0) {				// block task
 			tcb[curTask].event = s;
 			tcb[curTask].state = S_BLOCKED;
 			enqueueTask(s->blockedQueue, curTask);
@@ -102,8 +105,14 @@ int semWait(Semaphore* s) {
 		return 0;
 	} else {
 		// counting semaphore
-		// ?? implement counting semaphore
-		assert("Counting semaphore not implemented" && FALSE);
+		if (--(s->state) < 0) {
+			tcb[curTask].event = s;
+			tcb[curTask].state = S_BLOCKED;
+			enqueueTask(s->blockedQueue, curTask);
+			swapTask();						// reschedule the tasks
+			return 1;
+		}
+		return 0;
 	}
 } // end semWait
 
