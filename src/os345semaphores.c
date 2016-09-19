@@ -47,14 +47,9 @@ void semSignal(Semaphore* s) {
 	assert("semSignal Error" && s && ((s->type == 0) || (s->type == 1)));
 
 	// check semaphore type
-	if (s->type == 0) {
-		// binary semaphore
-		// look through tasks for one suspended on this semaphore
-
-temp:	// ?? temporary label
-
-		if (hasTask(s->blockedQueue)) {
-			int taskID = dequeueTask(s->blockedQueue);
+	if (s->type == BINARY) {
+		int taskID;
+		if ((taskID = dequeueTask(s->blockedQueue)) >= 0) {
 			s->state = 0;						// clear semaphore
 			tcb[taskID].event = 0;				// clear event pointer
 			tcb[taskID].state = S_READY;		// unblock task
@@ -71,8 +66,7 @@ temp:	// ?? temporary label
 	} else {
 		// counting semaphore
 		// ?? implement counting semaphore
-
-		goto temp;
+		assert("Counting semaphore not implemented" && FALSE);
 	}
 } // end semSignal
 
@@ -86,18 +80,18 @@ temp:	// ?? temporary label
 //	else block task
 //
 int semWait(Semaphore* s) {
-	assert("semWait Error" && s);										// assert semaphore
-	assert("semWait Error" && ((s->type == 0) || (s->type == 1)));		// assert legal type
-	assert("semWait Error" && !superMode);								// assert user mode
+	assert("semWait Error" && s);													// assert semaphore
+	assert("semWait Error" && ((s->type == BINARY) || (s->type == COUNTING)));		// assert legal type
+	assert("semWait Error" && !superMode);											// assert user mode
 
 	// check semaphore type
 	if (s->type == 0) {
 		// binary semaphore
 		// if state is zero, then block task
 
-temp:	// ?? temporary label
 		if (s->state == 0) {
-			tcb[curTask].event = s;		// block task
+			// block task
+			tcb[curTask].event = s;
 			tcb[curTask].state = S_BLOCKED;
 			enqueueTask(s->blockedQueue, curTask);
 			swapTask();						// reschedule the tasks
@@ -109,8 +103,7 @@ temp:	// ?? temporary label
 	} else {
 		// counting semaphore
 		// ?? implement counting semaphore
-
-		goto temp;
+		assert("Counting semaphore not implemented" && FALSE);
 	}
 } // end semWait
 
@@ -124,9 +117,9 @@ temp:	// ?? temporary label
 //	else return 0
 //
 int semTryLock(Semaphore* s) {
-	assert("semTryLock Error" && s);											// assert semaphore
-	assert("semTryLock Error" && ((s->type == 0) || (s->type == 1)));			// assert legal type
-	assert("semTryLock Error" && !superMode);									// assert user mode
+	assert("semTryLock Error" && s);														// assert semaphore
+	assert("semTryLock Error" && ((s->type == BINARY) || (s->type == COUNTING)));			// assert legal type
+	assert("semTryLock Error" && !superMode);												// assert user mode
 
 	// check semaphore type
 	if (s->type == 0) {

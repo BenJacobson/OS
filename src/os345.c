@@ -25,6 +25,7 @@
 #include <assert.h>
 
 #include "os345.h"
+#include "os345pqueue.h"
 #include "os345signals.h"
 #include "os345config.h"
 #include "os345lc3.h"

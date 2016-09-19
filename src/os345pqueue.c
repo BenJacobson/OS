@@ -76,11 +76,3 @@ PQueue newPQueue(int size) {
 		pqueue[i] = -1;
 	return pqueue;
 }
-
-
-// **********************************************************************
-// **********************************************************************
-// has task
-bool hasTask(PQueue pqueue) {
-	return pqueue[0] != -1;
-}

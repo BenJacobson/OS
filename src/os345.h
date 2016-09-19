@@ -81,6 +81,10 @@ typedef struct							// semaphore
 	/*PQueue*/ int* blockedQueue;		// priority queue of tasks blocked by semaphore
 } Semaphore;
 
+// Semaphore Types
+#define BINARY 0
+#define COUNTING 1
+
 // task control block
 typedef struct							// task control block
 {
