@@ -115,23 +115,17 @@ int P2_listTasks(int argc, char* argv[])
 {
 	int i;
 	// Running task
-	my_printf("\nRunning");
 	printTask(curTask);
-	my_printf("\n");
 	// Ready Queue
-	my_printf("\nReadyQueue");
 	for (i = readyQueue[0]; i > 0; i--) {
 		printTask(readyQueue[i]);
 	}
-	my_printf("\n");
 	// Blocked Queues
 	Semaphore* sem = semaphoreList;
 	while (sem) {
-		my_printf("\n%s", sem->name);
 		for (i = sem->blockedQueue[0]; i > 0; i--) {
 			printTask(sem->blockedQueue[i]);
 		}
-		my_printf("\n");
 		sem = (Semaphore*)sem->semLink;
 	}
 	return 0;

@@ -131,22 +131,20 @@ int semTryLock(Semaphore* s) {
 	assert("semTryLock Error" && !superMode);												// assert user mode
 
 	// check semaphore type
-	if (s->type == 0) {
-		// binary semaphore
-		// if state is zero, then block task
-
-temp:	// ?? temporary label
-		if (s->state == 0) {
-			return 0;
+	if (s->type == BINARY) {				// binary semaphore
+		// if state is zero, then do not acquire
+		if (s->state == 0) {				// block task
+			return FALSE;
 		}
 		// state is non-zero (semaphore already signaled)
 		s->state = 0;						// reset state, and don't block
-		return 1;
-	} else {
-		// counting semaphore
-		// ?? implement counting semaphore
-
-		goto temp;
+		return TRUE;
+	} else {								// counting semaphore
+		if (s->state <= 0) {
+			return FALSE;
+		}
+		(s->state)--;
+		return TRUE;
 	}
 } // end semTryLock
 
