@@ -23,6 +23,7 @@
 #include <setjmp.h>
 #include <time.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #include "os345.h"
 #include "os345config.h"
@@ -35,25 +36,27 @@ void pollInterrupts(void);
 static void saveBuffer(void);
 static void keyboard_isr(void);
 static void timer_isr(void);
+static void my_printf_isr(void);
 
 // **********************************************************************
 // **********************************************************************
 // global semaphores
 
-extern Semaphore* keyboard;				// keyboard semaphore
-extern Semaphore* charReady;			// character has been entered
-extern Semaphore* inBufferReady;		// input buffer ready semaphore
+extern Semaphore* keyboard;						// keyboard semaphore
+extern Semaphore* charReady;					// character has been entered
+extern Semaphore* inBufferReady;				// input buffer ready semaphore
 
-extern Semaphore* tics10secs;			// 10 second semaphore
-extern Semaphore* tics1sec;				// 1 second semaphore
-extern Semaphore* tics10thsec;			// 1/10 second semaphore
-
-extern char inChar;						// last entered character
-extern int charFlag;					// 0 => buffered input
-extern int inBufIndx;					// input pointer into input buffer
-extern char inBuffer[INBUF_SIZE+1];		// character input buffer
-extern int cmdBufIndx;					// input pointer into current command from command buffer
-extern char* cmdBuffer[CMDBUF_SIZE+1];	// previous buffer size
+extern Semaphore* tics10secs;					// 10 second semaphore
+extern Semaphore* tics1sec;						// 1 second semaphore
+extern Semaphore* tics10thsec;					// 1/10 second semaphore
+extern char inChar;								// last entered character
+extern int charFlag;							// 0 => buffered input
+extern int inBufIndx;							// input pointer into input buffer
+extern char inBuffer[INBUF_SIZE+1];				// character input buffer
+extern int cmdBufIndx;							// input pointer into current command from command buffer
+extern char* cmdBuffer[CMDBUF_SIZE];			// previous buffer size
+extern int myPrintfBufIndx;						// input index to myprintf buffer
+extern char myPrintfBuffer[MYPRINTFBUF_SIZE+1];	// stdout printf buffer
 
 extern void printPrompt(void);
 
@@ -84,13 +87,15 @@ void pollInterrupts(void)
 	lastPollClock = pollClock;
 
 	// check for keyboard interrupt
-	if ((inChar = GET_CHAR) > 0)
-	{
+	if ((inChar = GET_CHAR) > 0) {
 	  keyboard_isr();
 	}
 
 	// timer interrupt
 	timer_isr();
+
+	// Buffered printing
+	my_printf_isr();
 
 	return;
 } // end pollInterrupts
@@ -99,8 +104,7 @@ void pollInterrupts(void)
 // **********************************************************************
 // Save input buffer for recall
 //
-static void saveBuffer()
-{
+static void saveBuffer() {
 	if (cmdBuffer[CMDBUF_SIZE-1] != 0)
 		free(cmdBuffer[CMDBUF_SIZE-1]);
 	for (int i = CMDBUF_SIZE - 1; i > 0; i--)
@@ -287,8 +291,7 @@ static void keyboard_isr() {
 // **********************************************************************
 // timer interrupt service routine
 //
-static void timer_isr()
-{
+static void timer_isr() {
 	time_t currentTime;						// current time
 
 	// assert system mode
@@ -323,3 +326,30 @@ static void timer_isr()
 
 	return;
 } // end timer_isr
+
+
+// **********************************************************************
+// my printf interrupt service routine
+//
+static void my_printf_isr() {
+	if (myPrintfBufIndx != 0) {
+		printf("%s", myPrintfBuffer);
+		myPrintfBufIndx = 0;
+	}
+} // end my_printf_isr
+
+void my_printf(char* fmt, ...)
+{
+	va_list arg_ptr;
+	char pBuffer[128];
+	char* s = pBuffer;
+
+	va_start(arg_ptr, fmt);
+	vsprintf(pBuffer, fmt, arg_ptr);
+
+	while (*s && myPrintfBufIndx < MYPRINTFBUF_SIZE)
+		myPrintfBuffer[myPrintfBufIndx++] = *s++;
+	myPrintfBuffer[myPrintfBufIndx] = 0;
+
+	va_end(arg_ptr);
+} // end my_printf

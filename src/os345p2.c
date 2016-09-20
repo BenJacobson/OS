@@ -26,8 +26,6 @@
 #include "os345pqueue.h"
 #include "os345signals.h"
 
-#define my_printf	printf
-
 // ***********************************************************************
 // project 2 variables
 static Semaphore* s1Sem;					// task 1 semaphore
@@ -39,6 +37,7 @@ extern int curTask;							// current task #
 extern Semaphore* semaphoreList;			// linked list of active semaphores
 extern Semaphore* tics10secs;				// 10 seconds semaphore
 extern jmp_buf reset_context;				// context of kernel stack
+extern void my_printf(char* fmt, ...);		// buffered printf
 
 // ***********************************************************************
 // project 2 functions and tasks
@@ -98,7 +97,7 @@ int P2_project2(int argc, char* argv[])
 // ***********************************************************************
 // print formatted details of a task
 void printTask(int taskID) {
-	printf("\n%4d/%-4d%20s%4d  ", taskID, tcb[taskID].parent, tcb[taskID].name, tcb[taskID].priority);
+	my_printf("\n%4d/%-4d%20s%4d  ", taskID, tcb[taskID].parent, tcb[taskID].name, tcb[taskID].priority);
 	if (tcb[taskID].signal & mySIGSTOP) my_printf("Paused");
 	else if (tcb[taskID].state == S_NEW) my_printf("New");
 	else if (tcb[taskID].state == S_READY) my_printf("Ready");
@@ -118,12 +117,14 @@ int P2_listTasks(int argc, char* argv[])
 	printTask(curTask);
 	// Ready Queue
 	for (i = readyQueue[0]; i > 0; i--) {
+		SWAP
 		printTask(readyQueue[i]);
 	}
 	// Blocked Queues
 	Semaphore* sem = semaphoreList;
 	while (sem) {
 		for (i = sem->blockedQueue[0]; i > 0; i--) {
+			SWAP
 			printTask(sem->blockedQueue[i]);
 		}
 		sem = (Semaphore*)sem->semLink;

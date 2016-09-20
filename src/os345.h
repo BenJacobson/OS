@@ -34,6 +34,7 @@
 #define NUM_MESSAGES		500
 #define INBUF_SIZE			256
 #define CMDBUF_SIZE			10
+#define MYPRINTFBUF_SIZE	100
 #define ONE_TENTH_SEC		(CLOCKS_PER_SEC/10)
 
 // Default priorities

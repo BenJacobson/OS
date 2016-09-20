@@ -66,33 +66,35 @@ Semaphore* tics10thsec;				// 1/10 second semaphore
 // **********************************************************************
 // global system variables
 
-TCB tcb[MAX_TASKS];					// task control block
-Semaphore* taskSems[MAX_TASKS];		// task semaphore
-jmp_buf k_context;					// context of kernel stack
-jmp_buf reset_context;				// context of kernel stack
-volatile void* temp;				// temp pointer used in dispatcher
+TCB tcb[MAX_TASKS];						// task control block
+Semaphore* taskSems[MAX_TASKS];			// task semaphore
+jmp_buf k_context;						// context of kernel stack
+jmp_buf reset_context;					// context of kernel stack
+volatile void* temp;					// temp pointer used in dispatcher
 
-int scheduler_mode;					// scheduler mode
-int superMode;						// system mode
-int curTask;						// current task #
-long swapCount;						// number of re-schedule cycles
-char inChar;						// last entered character
-int charFlag;						// 0 => buffered input
-int inBufIndx;						// input pointer into input buffer
-char inBuffer[INBUF_SIZE+1];		// character input buffer
-int cmdBufIndx;						// input pointer to command buffer
-char* cmdBuffer[CMDBUF_SIZE];		// previous command buffer
-Message messages[NUM_MESSAGES];		// process message buffers
+int scheduler_mode;						// scheduler mode
+int superMode;							// system mode
+int curTask;							// current task #
+long swapCount;							// number of re-schedule cycles
+char inChar;							// last entered character
+int charFlag;							// 0 => buffered input
+int inBufIndx;							// input index into input buffer
+char inBuffer[INBUF_SIZE+1];			// character input buffer
+int cmdBufIndx;							// input index to command buffer
+char* cmdBuffer[CMDBUF_SIZE];			// previous command buffer
+int myPrintfBufIndx;					// input index to myprintf buffer
+char myPrintfBuffer[MYPRINTFBUF_SIZE+1];	// stdout printf buffer
+Message messages[NUM_MESSAGES];			// process message buffers
 
-int pollClock;						// current clock()
-int lastPollClock;					// last pollClock
-bool diskMounted;					// disk has been mounted
+int pollClock;							// current clock()
+int lastPollClock;						// last pollClock
+bool diskMounted;						// disk has been mounted
 
-time_t oldTime1;					// old 1sec time
-time_t oldTime10;					// old 10sec time
+time_t oldTime1;						// old 1sec time
+time_t oldTime10;						// old 10sec time
 clock_t myClkTime;
 clock_t myOldClkTime;
-int* readyQueue;					// ready priority queue
+PQueue readyQueue;						// ready priority queue
 
 
 // **********************************************************************
@@ -398,8 +400,6 @@ static int initOS()
 
 	// initialize lc-3 memory
 	initLC3Memory(LC3_MEM_FRAME, 0xF800>>6);
-
-	// ?? initialize all execution queues
 
 	return 0;
 } // end initOS
