@@ -64,12 +64,14 @@ int P2_project2(int argc, char* argv[])
 	createTask("signal1",					// task name
 					signalTask,				// task
 					VERY_HIGH_PRIORITY,		// task priority
+					1,						// task time slice
 					2,						// task argc
 					s1Argv);				// task argument pointers
 
 	createTask("signal2",					// task name
 					signalTask,				// task
 					VERY_HIGH_PRIORITY,		// task priority
+					1,						// task time slice
 					2,						// task argc
 					s2Argv);				// task argument pointers
 
@@ -77,6 +79,7 @@ int P2_project2(int argc, char* argv[])
 		createTask("Ten Seconds",			// task name
 					tenSecondTask,			// task
 					HIGH_PRIORITY,			// task priority
+					1,						// task time slice
 					2,						// task argc
 					tenSecondsArgv);		// task argument pointers
 	}
@@ -85,6 +88,7 @@ int P2_project2(int argc, char* argv[])
 		createTask("I'm Alive",				// task name
 					ImAliveTask,			// task
 					LOW_PRIORITY,			// task priority
+					i+1,					// task time slice
 					2,						// task argc
 					aliveArgv);				// task argument pointers
 	}

@@ -142,7 +142,7 @@ int P1_shellTask(int argc, char* argv[]) {
 				{
 					free(newArgv[--newArgc]); // remove ampersand
 					newArgv[newArgc] = 0;
-					createTask(newArgv[0], commands[i]->func, MED_PRIORITY, newArgc, newArgv);
+					createTask(newArgv[0], commands[i]->func, MED_PRIORITY, 1, newArgc, newArgv);
 				}
 				else // execute foreground
 				{

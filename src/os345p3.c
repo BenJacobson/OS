@@ -56,8 +56,9 @@ int P3_project3(int argc, char* argv[])
 	createTask( buf,				// task name
 		jurassicTask,				// task
 		MED_PRIORITY,				// task priority
-		1,								// task count
-		newArgv);					// task argument
+		1,							// task time slice
+		1,							// task argc
+		newArgv);					// task argv
 
 	// wait for park to get initialized...
 	while (!parkMutex) SWAP;

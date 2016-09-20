@@ -327,9 +327,10 @@ int P6_run(int argc, char* argv[])		// run lc3 program from RAM disk
 	strcpy(fileName, argv[1]);
 	if (!strstr(fileName, ".hex")) strcat(fileName, ".hex");
 	myArgv[1] = (char*)&fileName;
-	createTask( myArgv[0],				// task name
+	createTask( myArgv[0],						// task name
 					lc3Task,					// task
-					MED_PRIORITY,			// task priority
+					MED_PRIORITY,				// task priority
+					1,							// task time slice
 					2,							// task argc
 					myArgv);					// task arguments
 	return 0;

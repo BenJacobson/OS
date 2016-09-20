@@ -93,20 +93,22 @@ int jurassicTask(int argc, char* argv[])
 	}
 
 	// start display park task
-	createTask("displayPark",	// task name
+	createTask("displayPark",		// task name
 		jurassicDisplayTask,		// task
 		MED_PRIORITY,				// task priority
-		1,								// task count
+		1,							// task time slice
+		1,							// task count
 		argv);						// task argument
 
 	// OK, let's get the park going...
 	parkMutex = createSemaphore("parkMutex", BINARY, 1);	SWAP;
 
 	// start lost visitor task
-	createTask("lostVisitor",	// task name
+	createTask("lostVisitor",		// task name
 		lostVisitorTask,			// task
 		MED_PRIORITY,				// task priority
-		1,								// task count
+		1,							// task time slice
+		1,							// task count
 		argv);						// task argument
 
 	// wait to move cars

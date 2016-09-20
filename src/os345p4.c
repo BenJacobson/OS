@@ -519,9 +519,10 @@ void loadLC3File(char* string)
 
 	myArgv[0] = buff;
 	myArgv[1] = string;
-	createTask( myArgv[0],				// task name
+	createTask( myArgv[0],						// task name
 					lc3Task,					// task
-					MED_PRIORITY,			// task priority
+					MED_PRIORITY,				// task priority
+					1,							// task time slice
 					2,							// task argc
 				  	myArgv);					// task argv
 	return;

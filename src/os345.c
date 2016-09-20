@@ -155,6 +155,7 @@ int main(int argc, char* argv[])
 	createTask("myShell",			// task name
 					P1_shellTask,	// task
 					MED_PRIORITY,	// task priority
+					1,				// task time slice
 					argc,			// task arg count
 					argv);			// task argument pointers
 
@@ -336,6 +337,12 @@ void swapTask()
 
 	// increment swap cycle counter
 	swapCount++;
+
+	// check time slices
+	if (++(tcb[curTask].timeSliceCount) < tcb[curTask].timeSlice) {
+		return;
+	}
+	tcb[curTask].timeSliceCount = 0;
 
 	// either save current task context or schedule task (return)
 	if (setjmp(tcb[curTask].context))

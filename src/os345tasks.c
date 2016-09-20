@@ -44,11 +44,13 @@ extern Semaphore* taskSems[MAX_TASKS];		// task semaphore
 // **********************************************************************
 // create task
 int createTask(char* name,						// task name
-					int (*task)(int, char**),	// task address
-					int priority,				// task priority
-					int argc,					// task argument count
-					char* argv[])				// task argument pointers
+				int (*task)(int, char**),		// task address
+				int priority,					// task priority
+				int timeSlice,					// task time slice
+				int argc,						// task argument count
+				char* argv[])					// task argument pointers
 {
+	assert("Invalid time slice" && timeSlice > 0);
 	int tid;
 
 	// find an open tcb entry slot
@@ -72,6 +74,8 @@ int createTask(char* name,						// task name
 			tcb[tid].task = task;			// task address
 			tcb[tid].state = S_NEW;			// NEW task state
 			tcb[tid].priority = priority;	// task priority
+			tcb[tid].timeSlice = timeSlice;	// time slices given
+			tcb[tid].timeSliceCount = 0;	// time slices used this swap
 			tcb[tid].parent = curTask;		// parent
 			tcb[tid].argc = argc;			// argument count
 
