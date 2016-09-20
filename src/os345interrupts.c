@@ -192,7 +192,7 @@ static void keyboard_isr() {
 							// print line
 							putchar(CR);
 							printPrompt();
-							puts(inBuffer);
+							printf("%s", inBuffer);
 						}
 						break;
 					}
@@ -210,7 +210,7 @@ static void keyboard_isr() {
 							// print line
 							putchar(CR);
 							printPrompt();
-							puts(inBuffer);
+							printf("%s", inBuffer);
 						}
 						break;
 					}

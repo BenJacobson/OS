@@ -38,6 +38,9 @@ int signals(void)
 {
 	if (tcb[curTask].signal)
 	{
+		if (*(tcb[curTask].name) == 'T') {
+			int x = 0;
+		}
 		// SIGCONT
 		if (tcb[curTask].signal & mySIGCONT)
 		{

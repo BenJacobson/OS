@@ -343,7 +343,9 @@ void swapTask()
 	}
 
 	// context switch - move task state to ready
-	if (tcb[curTask].state == S_RUNNING) tcb[curTask].state = S_READY;
+	if (tcb[curTask].state == S_RUNNING) {
+		tcb[curTask].state = S_READY;
+	}
 	enqueueTask(readyQueue, curTask);
 
 	// move to kernel mode (reschedule)

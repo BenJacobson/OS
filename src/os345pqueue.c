@@ -67,5 +67,6 @@ TID dequeueTask(PQueue pqueue) {
 // new PQueue
 PQueue newPQueue() {
     PQueue pqueue = (PQueue)malloc(MAX_TASKS * sizeof(int));
+	pqueue[0] = 0;
 	return pqueue;
 }

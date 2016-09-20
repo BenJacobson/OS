@@ -1,8 +1,2 @@
-What is task.event? It looks like it just holds the blocking semaphore.
-Now that I have a blocking queue do I still need it?
-
-What is semaphore state?
-
-
 Blocked signals need to get their signals
 do sem trylock

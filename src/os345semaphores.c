@@ -52,7 +52,8 @@ void semSignal(Semaphore* s) {
 		if ((taskID = dequeueTask(s->blockedQueue)) >= 0) {
 			s->state = 0;						// clear semaphore
 			tcb[taskID].event = 0;				// clear event pointer
-			tcb[taskID].state = S_READY;		// unblock task
+			if (tcb[taskID].state != S_EXIT)
+				tcb[taskID].state = S_READY;		// unblock task
 			enqueueTask(readyQueue, taskID);
 			if (!superMode) swapTask();
 			return;
@@ -67,7 +68,8 @@ void semSignal(Semaphore* s) {
 		int taskID;
 		if ((taskID = dequeueTask(s->blockedQueue)) >= 0) {
 			tcb[taskID].event = 0;				// clear event pointer
-			tcb[taskID].state = S_READY;		// unblock task
+			if (tcb[taskID].state != S_EXIT)
+				tcb[taskID].state = S_READY;		// unblock task
 			enqueueTask(readyQueue, taskID);
 			if (!superMode) swapTask();
 			return;
@@ -88,6 +90,12 @@ int semWait(Semaphore* s) {
 	assert("semWait Error" && s);													// assert semaphore
 	assert("semWait Error" && ((s->type == BINARY) || (s->type == COUNTING)));		// assert legal type
 	assert("semWait Error" && !superMode);											// assert user mode
+
+	// Let exiting tasks exit
+	if (tcb[curTask].state == S_EXIT) {
+		swapTask();
+		return 1;
+	}
 
 	// check semaphore type
 	if (s->type == BINARY) {
