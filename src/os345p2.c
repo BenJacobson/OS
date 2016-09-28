@@ -79,7 +79,7 @@ int P2_project2(int argc, char* argv[])
 		createTask("Ten Seconds",			// task name
 					tenSecondTask,			// task
 					HIGH_PRIORITY,			// task priority
-					1,						// task time slice
+					4,						// task time slice
 					2,						// task argc
 					tenSecondsArgv);		// task argument pointers
 	}

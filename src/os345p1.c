@@ -187,7 +187,7 @@ int P1_project1(int argc, char* argv[])
 	SWAP										// do context switch
 	///
 	for (int j=0; j<20; j++) {
-		for (int i=0; i<10000; i++){SWAP}
+		for (int i=0; i<100000; i++){SWAP}
 		printf("\nproject1 %d", j);
 	}
 	///

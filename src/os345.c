@@ -190,10 +190,7 @@ int main(int argc, char* argv[])
 // **********************************************************************
 // scheduler
 //
-static int scheduler()
-{
-	int nextTask;
-
+static int scheduler() {
 	// ?? Design and implement a scheduler that will select the next highest
 	// ?? priority ready task to pass to the system dispatcher.
 
@@ -208,16 +205,7 @@ static int scheduler()
 	// ?? you thinking about scheduling.  You must implement code to handle
 	// ?? priorities, clean up dead tasks, and handle semaphores appropriately.
 
-	/*
-	// schedule next task
-	nextTask = ++curTask;
-
-	// mask sure nextTask is valid
-	while (!tcb[nextTask].name)
-	{
-		if (++nextTask >= MAX_TASKS) nextTask = 0;
-	}
-	*/
+	int nextTask;
 	nextTask = dequeueTask(readyQueue);
 	if (nextTask == -1)
 		return -1;
@@ -241,8 +229,7 @@ static int scheduler()
 // **********************************************************************
 // dispatch curTask
 //
-static int dispatcher()
-{
+static int dispatcher() {
 	int result;
 
 	// schedule task
@@ -339,7 +326,7 @@ void swapTask()
 	swapCount++;
 
 	// check time slices
-	if (++(tcb[curTask].timeSliceCount) < tcb[curTask].timeSlice) {
+	if (tcb[curTask].state == S_RUNNING && ++(tcb[curTask].timeSliceCount) < tcb[curTask].timeSlice) {
 		return;
 	}
 	tcb[curTask].timeSliceCount = 0;
