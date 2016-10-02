@@ -31,9 +31,10 @@
 // Jurassic Park
 extern JPARK myPark;
 extern Semaphore* parkMutex;						// protect park access
-extern Semaphore* fillSeat[NUM_CARS];			// (signal) seat ready to fill
-extern Semaphore* seatFilled[NUM_CARS];		// (wait) passenger seated
-extern Semaphore* rideOver[NUM_CARS];			// (signal) ride over
+extern Semaphore* fillSeat[NUM_CARS];				// (signal) seat ready to fill
+extern Semaphore* seatFilled[NUM_CARS];				// (wait) passenger seated
+extern Semaphore* rideOver[NUM_CARS];				// (signal) ride over
+extern DCEvent* DCHead;
 
 
 // ***********************************************************************
@@ -77,8 +78,11 @@ int P3_project3(int argc, char* argv[])
 int P3_dc(int argc, char* argv[])
 {
 	printf("\nDelta Clock");
-	// ?? Implement a routine to display the current delta clock contents
-	printf("\nTo Be Implemented!");
+	DCEvent* event = DCHead;
+	while (event) {
+		printf("\n%d %s", event->ticksLeft, event->sem->name);
+		event = event->next;
+	}
 	return 0;
 } // end CL3_dc
 

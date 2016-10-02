@@ -349,41 +349,25 @@ void my_printf(char* fmt, ...)
 	va_end(arg_ptr);
 } // end my_printf
 
-void printdc() {
-	DCEvent* event = DCHead;
-	while (event) {
-		printf("\n%d %s", event->ticksLeft, event->sem->name);
-		event = event->next;
-	}
-	printf("\n");
-}
-
 // **********************************************************************
 // insert semaphore into delta clock
 //
 void insertDeltaClock(int ticks, Semaphore* sem) {
-	if (!DCHead) {
-		DCHead = malloc(sizeof(DCEvent));
-		DCHead->next = 0;
-		DCHead->sem = sem;
-		DCHead->ticksLeft = ticks;		
-	} else {
-		DCEvent* lastEvent = 0;		
-		DCEvent* currEvent = DCHead;
-		while (lastEvent->next && lastEvent->next->ticksLeft < ticks) {
-			ticks -= lastEvent->ticksLeft;
-			if (!lastEvent->next)
-				break;
-			else
-				lastEvent = lastEvent->next;
-		}
-		DCEvent* nextEvent = lastEvent->next;
-		if (nextEvent) {
-			nextEvent->ticksLeft -= ticks;
-		}
-		lastEvent->next = malloc(sizeof(DCEvent));
-		lastEvent = lastEvent->next;
-		lastEvent->next = nextEvent;
+	DCEvent* lastEvent = 0;		
+	DCEvent* currEvent = DCHead;
+	while (currEvent && currEvent->ticksLeft < ticks) {
+		ticks -= currEvent->ticksLeft;
+		lastEvent = currEvent;
+		currEvent = currEvent->next;
 	}
-	printdc();
+	DCEvent* newEvent = malloc(sizeof(DCEvent));
+	newEvent->next = currEvent;
+	newEvent->ticksLeft = ticks;
+	newEvent->sem = sem;
+	if (currEvent)
+		currEvent->ticksLeft -= ticks;
+	if (lastEvent)
+		lastEvent->next = newEvent;
+	else
+		DCHead = newEvent;
 } // end insertDeltaClock

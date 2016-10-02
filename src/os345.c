@@ -147,10 +147,6 @@ int main(int argc, char* argv[])
 	tics1sec = createSemaphore("tics1sec", BINARY, 0);
 	tics10thsec = createSemaphore("tics10thsec", BINARY, 0);
 
-	insertDeltaClock(5, tics10secs);
-	insertDeltaClock(10, tics1sec);
-	insertDeltaClock(8, tics10thsec);
-
 	// schedule CLI task
 	createTask("myShell",			// task name
 					P1_shellTask,	// task
