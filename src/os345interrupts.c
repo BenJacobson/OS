@@ -60,19 +60,17 @@ extern char myPrintfBuffer[MYPRINTFBUF_SIZE+1];	// stdout printf buffer
 
 extern void printPrompt(void);
 
-extern time_t oldTime1;					// old 1sec time
-extern time_t oldTime10;				// old 10sec time
+extern DCEvent* DCHead;
+
+extern time_t oldTime1;							// old 1sec time
+extern time_t oldTime10;						// old 10sec time
 extern clock_t myClkTime;
 extern clock_t myOldClkTime;
 
-extern int pollClock;					// current clock()
-extern int lastPollClock;				// last pollClock
+extern int pollClock;							// current clock()
+extern int lastPollClock;						// last pollClock
 
-extern int superMode;					// system mode
-
-extern int* readyQueue;						// queue of tasks waiting to run
-extern int enqueueTask(int* queue, int taskID);	// pass the queue to add to and the taskID of the task to add
-extern void printQueue(int* queue);
+extern int superMode;							// system mode
 
 
 // **********************************************************************
@@ -321,9 +319,6 @@ static void timer_isr() {
 		semSignal(tics10thsec);
 	}
 
-	// ?? add other timer sampling/signaling code here for project 2
-
-
 	return;
 } // end timer_isr
 
@@ -353,3 +348,42 @@ void my_printf(char* fmt, ...)
 
 	va_end(arg_ptr);
 } // end my_printf
+
+void printdc() {
+	DCEvent* event = DCHead;
+	while (event) {
+		printf("\n%d %s", event->ticksLeft, event->sem->name);
+		event = event->next;
+	}
+	printf("\n");
+}
+
+// **********************************************************************
+// insert semaphore into delta clock
+//
+void insertDeltaClock(int ticks, Semaphore* sem) {
+	if (!DCHead) {
+		DCHead = malloc(sizeof(DCEvent));
+		DCHead->next = 0;
+		DCHead->sem = sem;
+		DCHead->ticksLeft = ticks;		
+	} else {
+		DCEvent* lastEvent = 0;		
+		DCEvent* currEvent = DCHead;
+		while (lastEvent->next && lastEvent->next->ticksLeft < ticks) {
+			ticks -= lastEvent->ticksLeft;
+			if (!lastEvent->next)
+				break;
+			else
+				lastEvent = lastEvent->next;
+		}
+		DCEvent* nextEvent = lastEvent->next;
+		if (nextEvent) {
+			nextEvent->ticksLeft -= ticks;
+		}
+		lastEvent->next = malloc(sizeof(DCEvent));
+		lastEvent = lastEvent->next;
+		lastEvent->next = nextEvent;
+	}
+	printdc();
+} // end insertDeltaClock

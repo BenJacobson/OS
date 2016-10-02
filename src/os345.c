@@ -37,16 +37,8 @@
 void pollInterrupts(void);
 static int scheduler(void);
 static int dispatcher(void);
-
-//static void keyboard_isr(void);
-//static void timer_isr(void);
-
 int sysKillTask(int taskID);
 static int initOS(void);
-
-int enqueueTask(int* queue, int taskID);
-int dequeueTask(int* queue);
-void printQueue(int* queue);
 
 // **********************************************************************
 // **********************************************************************
@@ -66,6 +58,7 @@ Semaphore* tics10thsec;				// 1/10 second semaphore
 // **********************************************************************
 // global system variables
 
+DCEvent* DCHead;						// head of the Delta Clock linked list
 TCB tcb[MAX_TASKS];						// task control block
 Semaphore* taskSems[MAX_TASKS];			// task semaphore
 jmp_buf k_context;						// context of kernel stack
@@ -96,6 +89,11 @@ clock_t myClkTime;
 clock_t myOldClkTime;
 PQueue readyQueue;						// ready priority queue
 
+// **********************************************************************
+// **********************************************************************
+// global system functions
+
+extern void insertDeltaClock(int ticks, Semaphore* sem);
 
 // **********************************************************************
 // **********************************************************************
@@ -149,7 +147,9 @@ int main(int argc, char* argv[])
 	tics1sec = createSemaphore("tics1sec", BINARY, 0);
 	tics10thsec = createSemaphore("tics10thsec", BINARY, 0);
 
-	//?? ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	insertDeltaClock(5, tics10secs);
+	insertDeltaClock(10, tics1sec);
+	insertDeltaClock(8, tics10thsec);
 
 	// schedule CLI task
 	createTask("myShell",			// task name
@@ -374,6 +374,7 @@ static int initOS()
 	charFlag = 0;						// 0 => buffered input
 	inBufIndx = 0;						// input pointer into input buffer
 	semaphoreList = 0;					// linked list of active semaphores
+	DCHead = 0;							// linked list of clock events
 	diskMounted = 0;					// disk has been mounted
 
 	// malloc ready queue

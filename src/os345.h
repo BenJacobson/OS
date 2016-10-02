@@ -72,7 +72,7 @@ typedef int TID;						// task id
 typedef int Priority;					// task priority
 
 // semaphore
-typedef struct							// semaphore
+typedef struct sempaphore				// semaphore
 {
 	struct semaphore* semLink;			// semaphore link
 	char* name;							// semaphore name
@@ -85,6 +85,14 @@ typedef struct							// semaphore
 // Semaphore Types
 #define BINARY 0
 #define COUNTING 1
+
+// delta clock
+typedef struct dcevent
+{
+	struct dcevent* next;
+	Semaphore* sem;
+	int ticksLeft;
+} DCEvent;
 
 // task control block
 typedef struct							// task control block

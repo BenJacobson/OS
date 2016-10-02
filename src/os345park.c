@@ -197,6 +197,7 @@ int jurassicTask(int argc, char* argv[])
 	killTask(-1);
 
 	// should never get here!!
+	assert("Jurassic Park should be killed already" && FALSE);
 	return 0;
 } // end
 
@@ -320,8 +321,8 @@ int jurassicDisplayTask(int argc, char* argv[])
 	do
 	{
 		JPARK currentPark;
-
-   	// update every second
+		
+		// update every second
 		SEM_WAIT(tics1sec);											SWAP;
 
 		// take snapshot of park
@@ -563,7 +564,7 @@ void drawPark(JPARK *park)
 	{
 		if ((rand()%3) == 1)
 		{
-			memcpy(&pk[dy1+0][-direction1+4], "...", 3);						SWAP;
+			memcpy(&pk[dy1+0][-direction1+4], "...", 3);					SWAP;
 			memcpy(&pk[dy1+1][-direction1+1], "__/|||\\___", 10);			SWAP;
 			memcpy(&pk[dy1+2][-direction1+0], "O  x   x", 8);				SWAP;
 		}
@@ -579,20 +580,20 @@ void drawPark(JPARK *park)
 	// move dinosaur #2
 
 	dy2 = dy2 + (rand()%3) - 1;
-	if (dy2 < D2Upper) dy2 = D2Upper;											SWAP;
-	if (dy2 > D2Lower) dy2 = D2Lower;											SWAP;
-	dy2 = (dy2+9) >= dy1 ? dy1-9 : dy2;											SWAP;
+	if (dy2 < D2Upper) dy2 = D2Upper;										SWAP;
+	if (dy2 > D2Lower) dy2 = D2Lower;										SWAP;
+	dy2 = (dy2+9) >= dy1 ? dy1-9 : dy2;										SWAP;
 
 	if (direction2 > 0)
 	{
-		memcpy(&pk[dy2+0][direction2+7], "_", 1);								SWAP;
-		memcpy(&pk[dy2+1][direction2+6], "/o\\", 3);							SWAP;
+		memcpy(&pk[dy2+0][direction2+7], "_", 1);							SWAP;
+		memcpy(&pk[dy2+1][direction2+6], "/o\\", 3);						SWAP;
 		memcpy(&pk[dy2+2][direction2+4], "</ _<", 5);						SWAP;
-		memcpy(&pk[dy2+3][direction2+3], "</ /", 4);							SWAP;
+		memcpy(&pk[dy2+3][direction2+3], "</ /", 4);						SWAP;
 		memcpy(&pk[dy2+4][direction2+2], "</ ==x", 6);						SWAP;
 		memcpy(&pk[dy2+5][direction2+3], "/  \\", 4);						SWAP;
 		memcpy(&pk[dy2+6][direction2+2], "//)__)", 6);						SWAP;
-		memcpy(&pk[dy2+7][direction2+0], "<<< \\_ \\_", 9);				SWAP;
+		memcpy(&pk[dy2+7][direction2+0], "<<< \\_ \\_", 9);					SWAP;
 		if (++direction2 > D2Right) direction2 = -direction2;				SWAP;
 	}
 	else
@@ -609,10 +610,10 @@ void drawPark(JPARK *park)
 	}
 
 	// draw park
-	CLEAR_SCREEN;																		SWAP;
-	printf("\n");																		SWAP;
+	CLEAR_SCREEN;															SWAP;
+	printf("\n");															SWAP;
 	for (i=0; i<25; i++) printf("\n%s", &pk[i][0]);							SWAP;
-	printf("\n");																		SWAP;
+	printf("\n");															SWAP;
 
 	// driver in only one place at a time
 	for (i=0; i<(NUM_DRIVERS-1); i++)
