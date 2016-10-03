@@ -52,7 +52,7 @@ void semSignal(Semaphore* s) {
 		if ((taskID = dequeueTask(s->blockedQueue)) >= 0) {
 			s->state = 0;						// clear semaphore
 			tcb[taskID].event = 0;				// clear event pointer
-			if (tcb[taskID].state != S_EXIT)
+			if (tcb[taskID].state == S_BLOCKED)
 				tcb[taskID].state = S_READY;		// unblock task
 			enqueueTask(readyQueue, taskID);
 			if (!superMode) swapTask();
@@ -68,7 +68,7 @@ void semSignal(Semaphore* s) {
 		int taskID;
 		if ((taskID = dequeueTask(s->blockedQueue)) >= 0) {
 			tcb[taskID].event = 0;				// clear event pointer
-			if (tcb[taskID].state != S_EXIT)
+			if (tcb[taskID].state == S_BLOCKED)
 				tcb[taskID].state = S_READY;		// unblock task
 			enqueueTask(readyQueue, taskID);
 			if (!superMode) swapTask();

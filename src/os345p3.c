@@ -39,8 +39,6 @@ extern DCEvent* DCHead;
 
 // ***********************************************************************
 // project 3 functions and tasks
-void CL3_project3(int, char**);
-void CL3_dc(int, char**);
 
 
 // ***********************************************************************
@@ -48,13 +46,13 @@ void CL3_dc(int, char**);
 // project3 command
 int P3_project3(int argc, char* argv[])
 {
-	char buf[32];
+	char buf1[32], buf2[32];
 	char* newArgv[2];
 
 	// start park
-	sprintf(buf, "jurassicPark");
-	newArgv[0] = buf;
-	createTask( buf,				// task name
+	sprintf(buf1, "jurassicPark");
+	newArgv[0] = buf1;
+	createTask(buf1,				// task name
 		jurassicTask,				// task
 		MED_PRIORITY,				// task priority
 		1,							// task time slice
@@ -66,6 +64,18 @@ int P3_project3(int argc, char* argv[])
 	printf("\nStart Jurassic Park...");
 
 	//?? create car, driver, and visitor tasks here
+	sprintf(buf1, "carTask");
+	newArgv[0] = buf1;
+	for (int i=0; i<NUM_CARS; i++) {
+		sprintf(buf2, "%d", i);
+		newArgv[1] = buf2;
+		createTask(buf1,
+			carTask,
+			MED_PRIORITY,
+			1,
+			2,
+			newArgv);
+	}
 
 	return 0;
 } // end project3
@@ -85,116 +95,3 @@ int P3_dc(int argc, char* argv[])
 	}
 	return 0;
 } // end CL3_dc
-
-
-/*
-// ***********************************************************************
-// ***********************************************************************
-// ***********************************************************************
-// ***********************************************************************
-// ***********************************************************************
-// ***********************************************************************
-// delta clock command
-int P3_dc(int argc, char* argv[])
-{
-	printf("\nDelta Clock");
-	// ?? Implement a routine to display the current delta clock contents
-	//printf("\nTo Be Implemented!");
-	int i;
-	for (i=0; i<numDeltaClock; i++)
-	{
-		printf("\n%4d%4d  %-20s", i, deltaClock[i].time, deltaClock[i].sem->name);
-	}
-	return 0;
-} // end CL3_dc
-
-
-// ***********************************************************************
-// display all pending events in the delta clock list
-void printDeltaClock(void)
-{
-	int i;
-	for (i=0; i<numDeltaClock; i++)
-	{
-		printf("\n%4d%4d  %-20s", i, deltaClock[i].time, deltaClock[i].sem->name);
-	}
-	return;
-}
-
-
-// ***********************************************************************
-// test delta clock
-int P3_tdc(int argc, char* argv[])
-{
-	createTask( "DC Test",			// task name
-		dcMonitorTask,		// task
-		10,					// task priority
-		argc,					// task arguments
-		argv);
-
-	timeTaskID = createTask( "Time",		// task name
-		timeTask,	// task
-		10,			// task priority
-		argc,			// task arguments
-		argv);
-	return 0;
-} // end P3_tdc
-
-
-
-// ***********************************************************************
-// monitor the delta clock task
-int dcMonitorTask(int argc, char* argv[])
-{
-	int i, flg;
-	char buf[32];
-	// create some test times for event[0-9]
-	int ttime[10] = {
-		90, 300, 50, 170, 340, 300, 50, 300, 40, 110	};
-
-	for (i=0; i<10; i++)
-	{
-		sprintf(buf, "event[%d]", i);
-		event[i] = createSemaphore(buf, BINARY, 0);
-		insertDeltaClock(ttime[i], event[i]);
-	}
-	printDeltaClock();
-
-	while (numDeltaClock > 0)
-	{
-		SEM_WAIT(dcChange)
-		flg = 0;
-		for (i=0; i<10; i++)
-		{
-			if (event[i]->state ==1)			{
-					printf("\n  event[%d] signaled", i);
-					event[i]->state = 0;
-					flg = 1;
-				}
-		}
-		if (flg) printDeltaClock();
-	}
-	printf("\nNo more events in Delta Clock");
-
-	// kill dcMonitorTask
-	tcb[timeTaskID].state = S_EXIT;
-	return 0;
-} // end dcMonitorTask
-
-
-extern Semaphore* tics1sec;
-
-// ********************************************************************************************
-// display time every tics1sec
-int timeTask(int argc, char* argv[])
-{
-	char svtime[64];						// ascii current time
-	while (1)
-	{
-		SEM_WAIT(tics1sec)
-		printf("\nTime = %s", myTime(svtime));
-	}
-	return 0;
-} // end timeTask
-*/
-

@@ -3,7 +3,7 @@
 #define __os345config_h__
 // ***********************************************************************
 //
-#define STARTUP_MSG	"CS345"
+#define STARTUP_MSG	"PWN SHELL"
 
 // ***********************************************************************
 // Select development system environment here:

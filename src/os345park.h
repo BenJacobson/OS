@@ -50,6 +50,7 @@ typedef struct jpark
 
 // ***********************************************************************
 int jurassicTask(int argc, char* argv[]);
+int carTask(int argc, char* argv[]);
 int jurassicDisplayTask(int argc, char* argv[]);
 int lostVisitorTask(int argc, char* argv[]);
 

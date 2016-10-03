@@ -142,6 +142,7 @@ void swapTask(void);
 int getMessage(int from, int to, Message* msg);
 int postMessage(int from, int to, char* msg);
 char* myTime(char*);
+void insertDeltaClock(int ticks, Semaphore* sem);
 
 Semaphore* createSemaphore(char* name, int type, int state);
 bool deleteSemaphore(Semaphore** semaphore);

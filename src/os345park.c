@@ -78,7 +78,7 @@ int jurassicTask(int argc, char* argv[])
 	myPark.numInGiftShop = 0;						SWAP;			// # in gift shop
 	myPark.numExitedPark = 0;						SWAP;			// # exited park
 
-	// create move care signal semaphore
+	// create move cars signal semaphore
 	moveCars = createSemaphore("moveCar", BINARY, 0);		SWAP;
 
 	// initialize communication semaphores
@@ -185,7 +185,8 @@ int jurassicTask(int argc, char* argv[])
 						(myPark.cars[2].location == myPark.cars[3].location) )
 				{
 					printf("\nProblem:");
-					for (k=0; k<NUM_CARS; k++) printf(" %d", myPark.cars[k].location);
+					for (k=0; k<NUM_CARS; k++)
+						printf(" %d", myPark.cars[k].location);
 					k=getchar();
 				}
 			}
@@ -202,7 +203,69 @@ int jurassicTask(int argc, char* argv[])
 } // end
 
 
+// ***********************************************************************
+// ***********************************************************************
+// car task
+int carTask(int argc, char* argv[]) {
+	assert("Car task requires at least 2 args" && argc >= 2);
+	int carID = atoi(argv[1]);
+	printf("\nCar %d started!", carID);
+	
+	for (int i=0; i<NUM_SEATS; i++) {
+		SEM_WAIT(fillSeat[carID]);			SWAP; // wait for available seat
+		// SEM_SIGNAL(getPassenger);			SWAP; // signal for visitor
+		// SEM_WAIT(seatTaken);				SWAP; // wait for visitor to reply
+		// ... save passenger ride over semaphore ...
+		// SEM_SIGNAL(passengerSeated);		SWAP: // signal visitor in seatFilled
+		if (i == NUM_SEATS-1) {
+			// SEM_WAIT(needDriverMutex);		SWAP;
+			// wakeup attendant
+			// SEM_SIGNAL(wakeupDriver);		SWAP;
+			// ... save driver ride over semaphore ...
+			// got driver (mutex)
+			// SEM_SIGNAL(needDriverMutex);	SWAP;
+		}
+		SEM_SIGNAL(seatFilled[carID]);		SWAP; // signal next seat ready
+	}
+	SEM_WAIT(rideOver[carID]);				SWAP; // wait for ride over
 
+	// ... release passengers and driver ...
+
+	return 0;
+} // end car task
+
+
+// ***********************************************************************
+// ***********************************************************************
+// driver task
+int driverTask(int argc, char* argv[])
+{
+	char buf[32];
+	Semaphore* driverDone;
+	int myID = atoi(argv[1]);						SWAP;	// get unique drive id
+	printf(buf, "Starting driverTask%d", myID);		SWAP;
+	sprintf(buf, "driverDone%d", myID + 1); 		SWAP;
+	driverDone = createSemaphore(buf, BINARY, 0);	SWAP; 	// create notification event
+
+	while(1) {
+		// SEM_WAIT(wakeupDriver);					SWAP;	// goto sleep
+		if (/*SEM_TRYLOCK(needDriver)*/1) {					// i’m awake  - driver needed?
+			// driverDoneSemaphore = driverDone;		SWAP;	// pass notification semaphore
+			// SEM_SIGNAL(driverReady);				SWAP;	// driver is awake
+			// SEM_WAIT(carReady);						SWAP;	// wait for car ready to go
+			// SEM_WAIT(driverDone);					SWAP;	// drive ride
+		} else if (/*SEM_TRYLOCK(needTicket)*/1) {				// someone need ticket?
+			// SEM_SIGNAL(takeTicket);					SWAP;	// print a ticket (binary)
+			// SEM_WAIT(tickets);						SWAP;	// wait for ticket (counting)
+		} else {
+			break;
+		}
+	}
+	return 0;
+} // end driverTask
+
+
+//***********************************************************************
 //***********************************************************************
 // Move car in Jurassic Park (if possible)
 //

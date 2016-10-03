@@ -49,6 +49,7 @@ Semaphore* semaphoreList;			// linked list of active semaphores
 Semaphore* keyboard;				// keyboard semaphore
 Semaphore* charReady;				// character has been entered
 Semaphore* inBufferReady;			// input buffer ready semaphore
+Semaphore* deltaClockMutex;			// mutex for delta clock access
 
 Semaphore* tics10secs;				// 10 second semaphore
 Semaphore* tics1sec;				// 1 second semaphore
@@ -143,6 +144,7 @@ int main(int argc, char* argv[])
 	charReady = createSemaphore("charReady", BINARY, 0);
 	inBufferReady = createSemaphore("inBufferReady", BINARY, 0);
 	keyboard = createSemaphore("keyboard", BINARY, 1);
+	deltaClockMutex = createSemaphore("dcMutex", BINARY, 1);
 	tics10secs = createSemaphore("tics10secs", COUNTING, 0);
 	tics1sec = createSemaphore("tics1sec", BINARY, 0);
 	tics10thsec = createSemaphore("tics10thsec", BINARY, 0);
