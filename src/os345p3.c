@@ -63,14 +63,42 @@ int P3_project3(int argc, char* argv[])
 	while (!parkMutex) SWAP;
 	printf("\nStart Jurassic Park...");
 
-	//?? create car, driver, and visitor tasks here
-	sprintf(buf1, "carTask");
-	newArgv[0] = buf1;
+	// visitor tasks
+	for (int i=0; i<NUM_VISITORS; i++) {
+		sprintf(buf1, "visitorTask%d", i);
+		newArgv[0] = buf1;
+		sprintf(buf2, "%d", i);
+		newArgv[1] = buf2;
+		createTask(buf1,
+			visitorTask,
+			MED_PRIORITY,
+			1,
+			2,
+			newArgv);
+	}
+
+	// car tasks
 	for (int i=0; i<NUM_CARS; i++) {
+		sprintf(buf1, "carTask%d", i);
+		newArgv[0] = buf1;
 		sprintf(buf2, "%d", i);
 		newArgv[1] = buf2;
 		createTask(buf1,
 			carTask,
+			MED_PRIORITY,
+			1,
+			2,
+			newArgv);
+	}
+
+	// driver tasks
+	for (int i=0; i<NUM_DRIVERS; i++) {
+		sprintf(buf1, "driverTask%d", i);
+		newArgv[0] = buf1;
+		sprintf(buf2, "%d", i);
+		newArgv[1] = buf2;
+		createTask(buf1,
+			driverTask,
 			MED_PRIORITY,
 			1,
 			2,

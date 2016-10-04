@@ -363,7 +363,7 @@ void my_printf(char* fmt, ...)
 // **********************************************************************
 // insert semaphore into delta clock
 //
-void insertDeltaClock(int ticks, Semaphore* sem) {
+void insertDeltaClock(unsigned int ticks, Semaphore* sem) {
 	SEM_WAIT(deltaClockMutex);
 		// set up iteration pointers
 		DCEvent* lastEvent = 0;		

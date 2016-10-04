@@ -94,7 +94,6 @@ PQueue readyQueue;						// ready priority queue
 // **********************************************************************
 // global system functions
 
-extern void insertDeltaClock(int ticks, Semaphore* sem);
 
 // **********************************************************************
 // **********************************************************************
@@ -374,6 +373,7 @@ static int initOS()
 	semaphoreList = 0;					// linked list of active semaphores
 	DCHead = 0;							// linked list of clock events
 	diskMounted = 0;					// disk has been mounted
+	srand(time(NULL));					// seed random function
 
 	// malloc ready queue
 	readyQueue = newPQueue(MAX_TASKS);

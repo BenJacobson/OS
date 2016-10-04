@@ -16,9 +16,9 @@
 
 // ***********************************************************************
 // Semaphore directives
-#define SEM_WAIT(s)			semWait(s);
-#define SEM_SIGNAL(s)		semSignal(s);
-#define SEM_TRYLOCK(s)		semTryLock(s);
+#define SEM_WAIT(s)			semWait(s)
+#define SEM_SIGNAL(s)		semSignal(s)
+#define SEM_TRYLOCK(s)		semTryLock(s)
 
 // ***********************************************************************
 // Miscellaneous directives
@@ -91,7 +91,7 @@ typedef struct dcevent
 {
 	struct dcevent* next;
 	Semaphore* sem;
-	int ticksLeft;
+	unsigned int ticksLeft;
 } DCEvent;
 
 // task control block
@@ -142,7 +142,7 @@ void swapTask(void);
 int getMessage(int from, int to, Message* msg);
 int postMessage(int from, int to, char* msg);
 char* myTime(char*);
-void insertDeltaClock(int ticks, Semaphore* sem);
+void insertDeltaClock(unsigned int ticks, Semaphore* sem);
 
 Semaphore* createSemaphore(char* name, int type, int state);
 bool deleteSemaphore(Semaphore** semaphore);
