@@ -318,16 +318,6 @@ static void timer_isr() {
 	if ((myClkTime - myOldClkTime) >= ONE_TENTH_SEC) {
 		myOldClkTime = myOldClkTime + ONE_TENTH_SEC;   // update old
 		semSignal(tics10thsec);
-		// dec delta clock
-		if (DCHead) {
-			DCHead->ticksLeft--;
-			while (DCHead && !DCHead->ticksLeft) {
-				SEM_SIGNAL(DCHead->sem);
-				DCEvent* usedEvent = DCHead;
-				DCHead = DCHead->next;
-				free(usedEvent);
-			}
-		}
 	}
 
 	return;
@@ -359,33 +349,3 @@ void my_printf(char* fmt, ...)
 
 	va_end(arg_ptr);
 } // end my_printf
-
-// **********************************************************************
-// insert semaphore into delta clock
-//
-void insertDeltaClock(unsigned int ticks, Semaphore* sem) {
-	SEM_WAIT(deltaClockMutex);
-		// set up iteration pointers
-		DCEvent* lastEvent = 0;		
-		DCEvent* currEvent = DCHead;
-		// walk list until find where to insert
-		while (currEvent && currEvent->ticksLeft < ticks) {
-			ticks -= currEvent->ticksLeft;
-			lastEvent = currEvent;
-			currEvent = currEvent->next;
-		}
-		// create the new event
-		DCEvent* newEvent = malloc(sizeof(DCEvent));
-		newEvent->next = currEvent;
-		newEvent->ticksLeft = ticks;
-		newEvent->sem = sem;
-		// update ticks for next tasks relative to new task
-		if (currEvent)
-			currEvent->ticksLeft -= ticks;
-		// link in the back
-		if (lastEvent)
-			lastEvent->next = newEvent;
-		else
-			DCHead = newEvent;
-	SEM_SIGNAL(deltaClockMutex);
-} // end insertDeltaClock

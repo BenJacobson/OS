@@ -37,6 +37,7 @@
 void pollInterrupts(void);
 static int scheduler(void);
 static int dispatcher(void);
+int decDC(int argc, char* argv[]);
 int sysKillTask(int taskID);
 static int initOS(void);
 
@@ -137,9 +138,7 @@ int main(int argc, char* argv[])
 	// initalize OS
 	if ( resetCode = initOS()) return resetCode;
 
-	// create global/system semaphores here
-	//?? vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-
+	// global/system semaphores
 	charReady = createSemaphore("charReady", BINARY, 0);
 	inBufferReady = createSemaphore("inBufferReady", BINARY, 0);
 	keyboard = createSemaphore("keyboard", BINARY, 1);
@@ -156,7 +155,13 @@ int main(int argc, char* argv[])
 					argc,			// task arg count
 					argv);			// task argument pointers
 
-	// HERE WE GO................
+	// schedule delta clock task
+	createTask("decDeltaClock",			// task name
+					decDC,				// task
+					VERY_HIGH_PRIORITY,	// task priority
+					1,					// task time slice
+					0,					// task arg count
+					0);					// task argument pointers
 
 	// Scheduling loop
 	// 1. Check for asynchronous events (character inputs, timers, etc.)
@@ -219,7 +224,6 @@ static int scheduler() {
 
 	return nextTask;
 } // end scheduler
-
 
 
 // **********************************************************************
@@ -305,7 +309,6 @@ static int dispatcher() {
 } // end dispatcher
 
 
-
 // **********************************************************************
 // **********************************************************************
 // Do a context switch to next task.
@@ -345,6 +348,56 @@ void swapTask()
 	longjmp(k_context, 2);
 } // end swapTask
 
+// **********************************************************************
+// insert semaphore into delta clock
+//
+void insertDeltaClock(unsigned int ticks, Semaphore* sem) {
+	SEM_WAIT(deltaClockMutex);
+		// set up iteration pointers
+		DCEvent* lastEvent = 0;		
+		DCEvent* currEvent = DCHead;
+		if (!ticks) ticks = 1;	// do not allow an insert of 0 time
+		// walk list until find where to insert
+		while (currEvent && currEvent->ticksLeft < ticks) {
+			ticks -= currEvent->ticksLeft;
+			lastEvent = currEvent;
+			currEvent = currEvent->next;
+		}
+		// create the new event
+		DCEvent* newEvent = malloc(sizeof(DCEvent));
+		newEvent->next = currEvent;
+		newEvent->ticksLeft = ticks;
+		newEvent->sem = sem;
+		// update ticks for next tasks relative to new task
+		if (currEvent)
+			currEvent->ticksLeft -= ticks;
+		// link in the back
+		if (lastEvent)
+			lastEvent->next = newEvent;
+		else
+			DCHead = newEvent;
+	SEM_SIGNAL(deltaClockMutex);
+} // end insertDeltaClock
+
+// **********************************************************************
+// decrement delta clock task
+//
+int decDC(int argc, char* argv[]) {
+	while(1) {
+		SEM_WAIT(tics10thsec);
+		SEM_WAIT(deltaClockMutex);
+		if (DCHead) {
+			DCHead->ticksLeft--;
+			while (DCHead && !DCHead->ticksLeft) {
+				SEM_SIGNAL(DCHead->sem);
+				DCEvent* usedEvent = DCHead;
+				DCHead = DCHead->next;
+				free(usedEvent);
+			}
+		}
+		SEM_SIGNAL(deltaClockMutex);
+	}
+} // end decDC
 
 
 // **********************************************************************

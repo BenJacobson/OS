@@ -98,7 +98,7 @@ int createTask(char* name,						// task name
 
 			enqueueTask(readyQueue, tid);
 
-			if (tid) swapTask();				// do context switch (if not cli)
+			if (!superMode) swapTask();				// do context switch (if not cli)
 			return tid;							// return tcb index (curTask)
 		}
 	}
