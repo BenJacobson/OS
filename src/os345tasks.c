@@ -26,14 +26,13 @@
 
 #include "os345.h"
 #include "os345signals.h"
+#include "os345pqueue.h"
 
 
 extern TCB tcb[];							// task control block
 extern int curTask;							// current task #
 
-extern int* readyQueue;						// queue of tasks waiting to run
-extern int enqueueTask(int* queue, int taskID);	// pass the queue to add to and the taskID of the task to add
-extern void printQueue(int* queue);
+extern PQueue readyQueue;					// queue of tasks waiting to run
 
 extern int superMode;						// system mode
 extern Semaphore* semaphoreList;			// linked list of active semaphores
@@ -162,9 +161,9 @@ int sysKillTask(int taskID)
 	
 	Semaphore* sem = semaphoreList;
 	Semaphore** semLink = &semaphoreList;
-
-	// assert that you are not pulling the rug out from under yourself!
+	// Print task name
 	printf("\nKill Task[%d] %s", taskID, tcb[taskID].name);
+	// assert that you are not pulling the rug out from under yourself!
 	assert("sysKillTask Error" && tcb[taskID].name && superMode);
 
 	// signal task terminated
