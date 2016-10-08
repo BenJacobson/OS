@@ -47,6 +47,7 @@
 // Task ID's
 #define SHELL_TID			0
 #define ALL_TID				-1
+#define NUM_SYS_TASKS		2
 
 // Task state equates
 #define S_NEW				0
@@ -114,7 +115,7 @@ typedef struct							// task control block
 	TID parent;							// task parent
 	int RPT;							// task root page table (project 5)
 	int cdir;							// task directory (project 6)
-	Semaphore *event;					// blocked task semaphore
+	Semaphore* event;					// blocked task semaphore
 	void* stack;						// task stack
 	jmp_buf context;					// task context pointer
 } TCB;

@@ -352,31 +352,34 @@ void swapTask()
 // insert semaphore into delta clock
 //
 void insertDeltaClock(unsigned int ticks, Semaphore* sem) {
-	SEM_WAIT(deltaClockMutex);
+	SEM_WAIT(deltaClockMutex);												SWAP;
 		// set up iteration pointers
-		DCEvent* lastEvent = 0;		
-		DCEvent* currEvent = DCHead;
-		if (!ticks) ticks = 1;	// do not allow an insert of 0 time
+		DCEvent* lastEvent = 0;												SWAP;
+		DCEvent* currEvent = DCHead;										SWAP;
+		// do not allow an insert of 0 time
+		if (!ticks) { ticks = 1; }											SWAP;
 		// walk list until find where to insert
-		while (currEvent && currEvent->ticksLeft < ticks) {
-			ticks -= currEvent->ticksLeft;
-			lastEvent = currEvent;
-			currEvent = currEvent->next;
+		while (currEvent && currEvent->ticksLeft < ticks) {					SWAP;
+			ticks -= currEvent->ticksLeft;									SWAP;
+			lastEvent = currEvent;											SWAP;
+			currEvent = currEvent->next;									SWAP;
 		}
 		// create the new event
-		DCEvent* newEvent = malloc(sizeof(DCEvent));
-		newEvent->next = currEvent;
-		newEvent->ticksLeft = ticks;
-		newEvent->sem = sem;
+		DCEvent* newEvent = malloc(sizeof(DCEvent));						SWAP;
+		newEvent->next = currEvent;											SWAP;
+		newEvent->ticksLeft = ticks;										SWAP;
+		newEvent->sem = sem;												SWAP;
 		// update ticks for next tasks relative to new task
-		if (currEvent)
-			currEvent->ticksLeft -= ticks;
+		if (currEvent) {
+			currEvent->ticksLeft -= ticks;									SWAP;
+		}
 		// link in the back
-		if (lastEvent)
-			lastEvent->next = newEvent;
-		else
-			DCHead = newEvent;
-	SEM_SIGNAL(deltaClockMutex);
+		if (lastEvent) {													SWAP;
+			lastEvent->next = newEvent;										SWAP;
+		} else {															SWAP;
+			DCHead = newEvent;												SWAP;
+		}
+	SEM_SIGNAL(deltaClockMutex);											SWAP;
 } // end insertDeltaClock
 
 // **********************************************************************
@@ -384,18 +387,18 @@ void insertDeltaClock(unsigned int ticks, Semaphore* sem) {
 //
 int decDC(int argc, char* argv[]) {
 	while(1) {
-		SEM_WAIT(tics10thsec);
-		SEM_WAIT(deltaClockMutex);
-		if (DCHead) {
-			DCHead->ticksLeft--;
-			while (DCHead && !DCHead->ticksLeft) {
-				SEM_SIGNAL(DCHead->sem);
-				DCEvent* usedEvent = DCHead;
-				DCHead = DCHead->next;
-				free(usedEvent);
+		SEM_WAIT(tics10thsec);												SWAP;
+		SEM_WAIT(deltaClockMutex);											SWAP;
+		if (DCHead) {														SWAP;
+			DCHead->ticksLeft--;											SWAP;
+			while (DCHead && !DCHead->ticksLeft) {							SWAP;
+				SEM_SIGNAL(DCHead->sem);									SWAP;
+				DCEvent* usedEvent = DCHead;								SWAP;
+				DCHead = DCHead->next;										SWAP;
+				free(usedEvent);											SWAP;
 			}
 		}
-		SEM_SIGNAL(deltaClockMutex);
+		SEM_SIGNAL(deltaClockMutex);										SWAP;
 	}
 } // end decDC
 

@@ -1,2 +1,2 @@
-Blocked signals need to get their signals
-do sem trylock
+Drivers sell gifts to visitors in the gift shop
+stop delta clock from getting killed (NUM_SYS_TASKS?)

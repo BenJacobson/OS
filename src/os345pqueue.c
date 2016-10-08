@@ -31,7 +31,7 @@ extern TCB tcb[];
 
 // **********************************************************************
 // **********************************************************************
-// enqueue
+// Enqueue Task
 int enqueueTask(PQueue pqueue, TID taskID) {
 	assert("Positive taskID" && taskID >= 0);
 	assert("Queue overflow" && pqueue[0] < MAX_TASKS - 2);
@@ -50,23 +50,42 @@ int enqueueTask(PQueue pqueue, TID taskID) {
 	// insert in lowest spot
 	pqueue[1] = taskID;
 	return taskID;
-}
+} // end enqueueTask
 
 // **********************************************************************
 // **********************************************************************
-// dequeue
+// Dequeue Task
 TID dequeueTask(PQueue pqueue) {
 	if (pqueue[0])
 		return pqueue[pqueue[0]--];
 	else
 		return -1;
-}
+} // end dequeueTask
 
 // **********************************************************************
 // **********************************************************************
-// new PQueue
+// Remove Task
+void removeTask(PQueue pqueue, TID taskID) {
+	int i, size = *pqueue;
+	if (size) {
+		for (i=1; i<=size; i++) {
+			if (pqueue[i] == taskID) {
+				break;
+			}
+		}
+		while (i<size) {
+			pqueue[i] = pqueue[i+1];
+			i++;
+		}
+		(*pqueue)--;
+	}
+} // end removeTask
+
+// **********************************************************************
+// **********************************************************************
+// New PQueue
 PQueue newPQueue() {
     PQueue pqueue = (PQueue)malloc(MAX_TASKS * sizeof(int));
 	pqueue[0] = 0;
 	return pqueue;
-}
+} // end newPQueue

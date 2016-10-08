@@ -116,7 +116,7 @@ int createTask(char* name,						// task name
 static void exitTask(int taskID);
 int killTask(int taskID)
 {
-	if (taskID != 0)			// don't terminate shell
+	if (taskID < 0 || taskID >= NUM_SYS_TASKS)			// don't terminate shell
 	{
 		if (taskID < 0)			// kill all tasks
 		{
@@ -141,12 +141,9 @@ static void exitTask(int taskID)
 {
 	assert("exitTaskError" && tcb[taskID].name);
 
-	// 1. find task in system queue
-	// 2. if blocked, unblock (handle semaphore)
-	// 3. set state to exit
-
-	// ?? add code here
-
+	if (tcb[taskID].state == S_BLOCKED) {
+		removeTask(tcb[taskID].event->blockedQueue, taskID);
+	}
 	tcb[taskID].state = S_EXIT;			// EXIT task state
 	return;
 } // end exitTask
