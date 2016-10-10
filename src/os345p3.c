@@ -34,6 +34,8 @@ extern Semaphore* parkMutex;						// protect park access
 extern Semaphore* fillSeat[NUM_CARS];				// (signal) seat ready to fill
 extern Semaphore* seatFilled[NUM_CARS];				// (wait) passenger seated
 extern Semaphore* rideOver[NUM_CARS];				// (signal) ride over
+extern Semaphore* needMaintenance;
+extern Semaphore* trackWorks;
 extern DCEvent* DCHead;
 
 Semaphore* parkEntrance;					// counting sempaphore to restrict
@@ -206,7 +208,7 @@ int carTask(int argc, char* argv[]) {
 int getLeavingCar() {
 	for (int i=0; i<NUM_CARS; i++) {
 		if (myPark.cars[i].location == 33) {
-			return i+2;
+			return i+3;
 		}
 	}
 	return 0;
@@ -247,6 +249,12 @@ int driverTask(int argc, char* argv[])
 			SEM_SIGNAL(driverMutex);					SWAP;
 			SEM_SIGNAL(cashierAvailable);				SWAP;
 			SEM_WAIT(purchaseGift);						SWAP;
+		} else if (SEM_TRYLOCK(needMaintenance)) {		SWAP;
+			myPark.drivers[myID] = 2;					SWAP;		
+			insertDeltaClock(rand()%50+50, driverDone);	SWAP;
+			SEM_WAIT(driverDone);						SWAP;
+			SEM_SIGNAL(trackWorks);						SWAP;
+			SEM_SIGNAL(driverMutex);					SWAP;
 		} else {										SWAP;
 			SEM_SIGNAL(driverMutex);					SWAP;
 			break;

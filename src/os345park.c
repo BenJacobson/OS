@@ -27,13 +27,17 @@
 
 JPARK myPark;
 Semaphore* parkMutex;						// mutex park variable access
-Semaphore* fillSeat[NUM_CARS];			// (signal) seat ready to fill
+Semaphore* fillSeat[NUM_CARS];				// (signal) seat ready to fill
 Semaphore* seatFilled[NUM_CARS];			// (wait) passenger seated
-Semaphore* rideOver[NUM_CARS];			// (signal) ride over
+Semaphore* rideOver[NUM_CARS];				// (signal) ride over
+Semaphore* trackWorks;						// must acquire to pass first crossroads in car
+Semaphore* needMaintenance;					// signal track needs maintainance
 
 extern TCB tcb[];							// task control block
 extern int curTask;
-extern Semaphore* tics1sec;				// 1 second semaphore
+extern Semaphore* tics1sec;					// 1 second semaphore
+extern Semaphore* driverMutex;
+extern Semaphore* wakeupDriver;
 
 Semaphore* moveCars;
 int makeMove(int car);
@@ -91,6 +95,10 @@ int jurassicTask(int argc, char* argv[])
 		sprintf(buf, "rideOver%d", i);						SWAP;
 		rideOver[i] = createSemaphore(buf, BINARY, 0);		SWAP;
 	}
+
+	// create track semaphores
+	trackWorks = createSemaphore("trackWorks", BINARY, 1);
+	needMaintenance = createSemaphore("needMaintenance", BINARY, 0);
 
 	// start display park task
 	createTask("displayPark",	// task name
@@ -219,7 +227,7 @@ int makeMove(int car)
 		// at cross roads 1
 		case 7:
 		{
-			j = (rand()%2) ? 24 : 8;								SWAP;
+			j = (rand()%2) ? 24 : 8;							SWAP;
 			break;
 		}
 
@@ -265,14 +273,16 @@ int makeMove(int car)
 		// loading car
 		case 33:
 		{
-			// if there is someone in car and noone is in line, proceed
-			//if ((myPark.cars[car].passengers == NUM_SEATS) ||
-			//	 ((myPark.numInCarLine == 0) && myPark.cars[car].passengers))
-
 			// if car is full, proceed into park
 			if (myPark.cars[car].passengers == NUM_SEATS)
 			{
-				j = 0;												SWAP;
+				if (SEM_TRYLOCK(trackWorks)) {
+					if (rand()%5) SEM_SIGNAL(trackWorks);			SWAP;
+					j = 0;											SWAP;
+				} else if (SEM_TRYLOCK(driverMutex)) {
+					SEM_SIGNAL(needMaintenance);					SWAP;
+					SEM_SIGNAL(wakeupDriver);						SWAP;
+				}
 			}
 			break;
 		}
@@ -393,7 +403,7 @@ void drawPark(JPARK *park)
 
 	int i, j;
 	char svtime[64];						// ascii current time
-	char driver[] = {'T', 'z', 'G', 'A', 'B', 'C', 'D' };
+	char driver[] = {'T', 'z', 'G', 'F', 'A', 'B', 'C', 'D' };
 	char buf[32];
 	char pk[25][80];
 	static int cp[34][3] = {	{2, 29, 0}, {2, 33, 0}, {2, 37, 0}, {2, 41, 0},				// 0-6
@@ -484,6 +494,9 @@ void drawPark(JPARK *park)
 	// out number exited park
 	sprintf(buf, "%d", park->numExitedPark);							SWAP;
 	memcpy(&pk[22][5 - strlen(buf)], buf, strlen(buf));					SWAP;
+
+	// draw broken track
+	if (trackWorks->state == 0) pk[2][30] = '$';						SWAP;
 
 	// cars
 	for (i=0; i<NUM_CARS; i++)
