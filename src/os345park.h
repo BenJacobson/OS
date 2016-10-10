@@ -16,7 +16,9 @@
 #define MAX_IN_MUSEUM	5
 #define MAX_IN_GIFTSHOP	2
 
+//#define ParkDebug(s) printf("\n%s: %s", TASK_NAME, s);
 #define ParkDebug(s) printf("\n%s: %s", "TASK_NAME", s);
+//#define ParkDebug(s) SWAP;
 #define CLEAR_SCREEN	//system("cls");
 
 // ***********************************************************************
@@ -48,9 +50,6 @@ typedef struct jpark
 
 // ***********************************************************************
 int jurassicTask(int argc, char* argv[]);
-int visitorTask(int argc, char* argv[]);
-int carTask(int argc, char* argv[]);
-int driverTask(int argc, char* argv[]);
 int jurassicDisplayTask(int argc, char* argv[]);
 int lostVisitorTask(int argc, char* argv[]);
 

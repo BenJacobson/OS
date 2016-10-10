@@ -116,12 +116,12 @@ int createTask(char* name,						// task name
 static void exitTask(int taskID);
 int killTask(int taskID)
 {
-	if (taskID < 0 || taskID >= NUM_SYS_TASKS)			// don't terminate shell
+	if (taskID != 0)			// don't terminate shell
 	{
 		if (taskID < 0)			// kill all tasks
 		{
 			int tid;
-			for (tid = 1; tid < MAX_TASKS; tid++)
+			for (tid = NUM_SYS_TASKS; tid < MAX_TASKS; tid++)
 			{
 				if (tcb[tid].name) exitTask(tid);
 			}

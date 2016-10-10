@@ -26,42 +26,18 @@
 #include "os345park.h"
 
 JPARK myPark;
-Semaphore* moveCars;						// binary semaphore to signal cars to move
-Semaphore* fillSeat[NUM_CARS];				// (signal) seat ready to fill
-Semaphore* seatFilled[NUM_CARS];			// (wait) passenger seated
-Semaphore* rideOver[NUM_CARS];				// (signal) ride over
-Semaphore* rideOverPassengers[NUM_CARS][NUM_SEATS+1];	// binary semaphore buffer to hold passengers' semaphores to signal when ride is over
-Semaphore* parkEntrance;					// counting sempaphore to restrict
-Semaphore* wakeupDriver;					// binary semaphore to signal a driver
-Semaphore* needDriver;						// binary semaphore to signal driver for a car 
-Semaphore* getSeat;							// binary semaphore to mutex getting a seat
-Semaphore* needPassenger;					// binary semaphore to signal visitor from car to board
-Semaphore* needTicket;						// binary semaphore to signal driver to sell a ticket
-Semaphore* tickets;							// counting semaphore of tickets available to sell
-Semaphore* getTicket;						// binary semaphore to mutex who can ask for a ticket
-Semaphore* museum;							// counting semaphore of people in the museum
-Semaphore* giftShop;						// counting semaphore of people in the gift shop
-Semaphore* driverMutex;						// binary semaphore to allow one visitor to wake up a driver at a time
-Semaphore* buyTicket;						// binary semaphore to signal driver that ticket was tacken
-Semaphore* ticketReady;						// binary semaphore to signal that a ticket is ready to the visitor
-Semaphore* mailboxMutex;					// binary semaphore to allow one access to the mailbox at a time
-Semaphore* mailboxReady;					// binary semaphore to signal that a semaphore is in the mailbox
-Semaphore* mailAcquired;					// binary semaphore to signal that the semaphore has been received from the mailbox
-Semaphore* semaphoreMailbox;				// global semaphore variable for passing semaphores between tasks
 Semaphore* parkMutex;						// mutex park variable access
+Semaphore* fillSeat[NUM_CARS];			// (signal) seat ready to fill
+Semaphore* seatFilled[NUM_CARS];			// (wait) passenger seated
+Semaphore* rideOver[NUM_CARS];			// (signal) ride over
 
-// ***********************************************************************
-// ***********************************************************************
-// Local prototypes
-int makeMove(int car);
-void drawPark(JPARK *park);
-
-// ***********************************************************************
-// ***********************************************************************
-// External variables
 extern TCB tcb[];							// task control block
 extern int curTask;
-extern Semaphore* tics1sec;					// 1 second semaphore
+extern Semaphore* tics1sec;				// 1 second semaphore
+
+Semaphore* moveCars;
+int makeMove(int car);
+void drawPark(JPARK *park);
 
 
 // ***********************************************************************
@@ -102,7 +78,7 @@ int jurassicTask(int argc, char* argv[])
 	myPark.numInGiftShop = 0;						SWAP;			// # in gift shop
 	myPark.numExitedPark = 0;						SWAP;			// # exited park
 
-	// create move cars signal semaphore
+	// create move care signal semaphore
 	moveCars = createSemaphore("moveCar", BINARY, 0);		SWAP;
 
 	// initialize communication semaphores
@@ -116,29 +92,11 @@ int jurassicTask(int argc, char* argv[])
 		rideOver[i] = createSemaphore(buf, BINARY, 0);		SWAP;
 	}
 
-	// Initialize other semaphores
-	parkEntrance = createSemaphore("parkEntance", COUNTING, MAX_IN_PARK);
-	wakeupDriver = createSemaphore("wakeupDriver", BINARY, 0);
-	needDriver = createSemaphore("needDriver", BINARY, 0); 
-	needTicket = createSemaphore("needTicket", BINARY, 0);
-	tickets = createSemaphore("tickets", COUNTING, MAX_TICKETS);
-	getTicket = createSemaphore("getTicket", BINARY, 1);
-	museum = createSemaphore("museum", COUNTING, MAX_IN_MUSEUM);
-	giftShop = createSemaphore("giftShop", COUNTING, MAX_IN_GIFTSHOP);
-	driverMutex = createSemaphore("driverMutex", BINARY, 1);
-	ticketReady = createSemaphore("ticketReady", BINARY, 0);
-	buyTicket = createSemaphore("buyTicket", BINARY, 0);
-	getSeat = createSemaphore("getSeat", BINARY, 1);
-	needPassenger = createSemaphore("needPassenger", BINARY, 0);
-	mailboxMutex = createSemaphore("mailboxMutex", BINARY, 1);
-	mailboxReady = createSemaphore("mailboxReady", BINARY, 0);
-	mailAcquired = createSemaphore("mailAcquired", BINARY, 0);
-
 	// start display park task
-	createTask("displayPark",		// task name
+	createTask("displayPark",	// task name
 		jurassicDisplayTask,		// task
 		MED_PRIORITY,				// task priority
-		1,							// task time slice
+		1,							// time slice
 		1,							// task count
 		argv);						// task argument
 
@@ -146,10 +104,10 @@ int jurassicTask(int argc, char* argv[])
 	parkMutex = createSemaphore("parkMutex", BINARY, 1);	SWAP;
 
 	// start lost visitor task
-	createTask("lostVisitor",		// task name
+	createTask("lostVisitor",	// task name
 		lostVisitorTask,			// task
 		MED_PRIORITY,				// task priority
-		1,							// task time slice
+		1,							// time slice
 		1,							// task count
 		argv);						// task argument
 
@@ -157,7 +115,7 @@ int jurassicTask(int argc, char* argv[])
 	do
 	{
    	// wait for signal to move cars
-		// ParkDebug("SEM_WAIT(moveCars)");
+		ParkDebug("SEM_WAIT(moveCars)");
 		SEM_WAIT(moveCars);									SWAP;
 
 		// order car locations
@@ -193,11 +151,11 @@ int jurassicTask(int argc, char* argv[])
 				{
 					// need a passenger
 					sprintf(buf, "SEM_SIGNAL(fillSeat[%d])", c[i]);
-					// ParkDebug(buf);
+					ParkDebug(buf);
 					SEM_SIGNAL(fillSeat[c[i]]);					SWAP;	// seat open
 
 					sprintf(buf, "SEM_WAIT(seatFilled[%d])", c[i]);
-					// ParkDebug(buf);
+					ParkDebug(buf);
 					SEM_WAIT(seatFilled[c[i]]);					SWAP;	// passenger in seat
 					myPark.cars[c[i]].passengers++;				SWAP;
 				}
@@ -213,7 +171,7 @@ int jurassicTask(int argc, char* argv[])
 					if (--myPark.cars[c[i]].passengers == 0)
 					{
 						sprintf(buf, "SEM_SIGNAL(rideOver[%d])", c[i]);
-						// ParkDebug(buf);
+						ParkDebug(buf);
 						SEM_SIGNAL(rideOver[c[i]]);				SWAP;
 					}
 				}
@@ -227,8 +185,7 @@ int jurassicTask(int argc, char* argv[])
 						(myPark.cars[2].location == myPark.cars[3].location) )
 				{
 					printf("\nProblem:");
-					for (k=0; k<NUM_CARS; k++)
-						printf(" %d", myPark.cars[k].location);
+					for (k=0; k<NUM_CARS; k++) printf(" %d", myPark.cars[k].location);
 					k=getchar();
 				}
 			}
@@ -240,195 +197,11 @@ int jurassicTask(int argc, char* argv[])
 	killTask(-1);
 
 	// should never get here!!
-	assert("Jurassic Park should be killed already" && FALSE);
 	return 0;
 } // end
 
 
-// ***********************************************************************
-// ***********************************************************************
-// visitor task
-int visitorTask(int argc, char* argv[]) {
-	char buf[32];
-	int myID = atoi(argv[1]);
-	// create visotor's personal semaphore
-	sprintf(buf, "myVisitorSemaphore%d", myID);							SWAP;
-	Semaphore* myVisitorSemaphore = createSemaphore(buf, BINARY, 0);	SWAP;
-	// wait 0-10 seconds before trying to enter park
-	insertDeltaClock(rand()%100, myVisitorSemaphore);					SWAP;
-	SEM_WAIT(myVisitorSemaphore);										SWAP;
-	// Update park
-	SEM_WAIT(parkMutex);												SWAP;
-	myPark.numOutsidePark++;											SWAP;
-	SEM_SIGNAL(parkMutex);												SWAP;
-	// Wait to enter park
-	SEM_WAIT(parkEntrance);												SWAP;
-	// Update park
-	SEM_WAIT(parkMutex);												SWAP;
-	myPark.numOutsidePark--;											SWAP;
-	myPark.numInPark++;													SWAP;
-	myPark.numInTicketLine++;											SWAP;
-	SEM_SIGNAL(parkMutex);												SWAP;
-	// Wait to get a ticket
-	SEM_WAIT(getTicket);												SWAP;
-	SEM_WAIT(driverMutex);												SWAP;
-	SEM_SIGNAL(needTicket);												SWAP;
-	SEM_SIGNAL(wakeupDriver);											SWAP;
-	SEM_WAIT(ticketReady);												SWAP;
-	SEM_SIGNAL(buyTicket);												SWAP;
-	SEM_SIGNAL(getTicket);												SWAP;
-	// Update park
-	SEM_WAIT(parkMutex);												SWAP;
-	myPark.numInTicketLine--;											SWAP;
-	myPark.numInMuseumLine++;											SWAP;
-	myPark.numTicketsAvailable--;										SWAP;
-	SEM_SIGNAL(parkMutex);												SWAP;
-	// Wait in line for the museum
-	SEM_WAIT(museum);													SWAP;
-	// Update park
-	SEM_WAIT(parkMutex);												SWAP;
-	myPark.numInMuseumLine--;											SWAP;
-	myPark.numInMuseum++;												SWAP;
-	SEM_SIGNAL(parkMutex);												SWAP;
-	// Stay in the museum for 0-3 seconds
-	insertDeltaClock(rand()%30, myVisitorSemaphore);					SWAP;
-	SEM_WAIT(myVisitorSemaphore);										SWAP;
-	SEM_SIGNAL(museum);													SWAP;
-	// Update park
-	SEM_WAIT(parkMutex);												SWAP;
-	myPark.numInMuseum--;												SWAP;
-	myPark.numInCarLine++;												SWAP;
-	SEM_SIGNAL(parkMutex);												SWAP;
-	// Wait in line for the car ride
-	SEM_WAIT(getSeat);													SWAP;
-	SEM_WAIT(needPassenger);											SWAP;
-	SEM_SIGNAL(getSeat);												SWAP;
-	// Get in the car
-	SEM_WAIT(mailboxMutex);												SWAP;
-	semaphoreMailbox = myVisitorSemaphore;								SWAP;
-	SEM_SIGNAL(mailboxReady);											SWAP;
-	SEM_WAIT(mailAcquired);												SWAP;
-	SEM_SIGNAL(mailboxMutex);											SWAP;
-	SEM_SIGNAL(tickets);												SWAP;
-	// Update park
-	SEM_WAIT(parkMutex);												SWAP;
-	myPark.numInCarLine--;												SWAP;
-	myPark.numInCars++;													SWAP;
-	myPark.numTicketsAvailable++;										SWAP;
-	SEM_SIGNAL(parkMutex);												SWAP;
-	// wait until the ride is over
-	SEM_WAIT(myVisitorSemaphore);										SWAP;
-	// Update park
-	SEM_WAIT(parkMutex);												SWAP;
-	myPark.numInCars--;													SWAP;
-	myPark.numInGiftLine++;												SWAP;
-	SEM_SIGNAL(parkMutex);												SWAP;
-	// Wait in line for the gift shop
-	SEM_WAIT(giftShop);													SWAP;
-	// Update park
-	SEM_WAIT(parkMutex);												SWAP;
-	myPark.numInGiftLine--;												SWAP;
-	myPark.numInGiftShop++;												SWAP;
-	SEM_SIGNAL(parkMutex);												SWAP;
-	// Stay in the giftShop for 0-3 seconds
-	insertDeltaClock(rand()%30, myVisitorSemaphore);					SWAP;
-	SEM_WAIT(myVisitorSemaphore);										SWAP;
-	SEM_SIGNAL(giftShop);												SWAP;
-	// Update park
-	SEM_WAIT(parkMutex);												SWAP;
-	myPark.numInGiftShop--;												SWAP;
-	myPark.numInPark--;													SWAP;
-	myPark.numExitedPark++;												SWAP;
-	SEM_SIGNAL(parkMutex);												SWAP;
-	// leave the park
-	SEM_SIGNAL(parkEntrance);											SWAP;
-	return 0;
-} // end visitor task
 
-
-// ***********************************************************************
-// ***********************************************************************
-// car task
-int carTask(int argc, char* argv[]) {
-	int carID = atoi(argv[1]);
-	while (1) {
-		for (int i=0; i<NUM_SEATS; i++) {
-			SEM_WAIT(fillSeat[carID]);										SWAP; // wait for available seat
-			SEM_SIGNAL(needPassenger);										SWAP; // signal for visitor
-			SEM_WAIT(mailboxReady);											SWAP;
-			rideOverPassengers[carID][i] = semaphoreMailbox;				SWAP;
-			SEM_SIGNAL(mailAcquired);										SWAP;
-			if (i == NUM_SEATS-1) {											SWAP;
-				SEM_WAIT(driverMutex);										SWAP;
-				SEM_SIGNAL(needDriver);										SWAP;
-				SEM_SIGNAL(wakeupDriver);									SWAP;
-				SEM_WAIT(mailboxReady);										SWAP;
-				rideOverPassengers[carID][NUM_SEATS] = semaphoreMailbox;	SWAP;
-				SEM_SIGNAL(mailAcquired);									SWAP;
-			}
-			SEM_SIGNAL(seatFilled[carID]);									SWAP; // signal next seat ready
-		}
-		SEM_WAIT(rideOver[carID]);											SWAP; // wait for ride over
-
-		for (int i=0; i<=NUM_SEATS; i++) {
-			SEM_SIGNAL(rideOverPassengers[carID][i]);						SWAP;
-		}
-	}
-	return 0;
-} // end car task
-
-// ***********************************************************************
-// ***********************************************************************
-// Get the number of the car about to embark
-int getLeavingCar() {
-	for (int i=0; i<NUM_CARS; i++) {
-		if (myPark.cars[i].location == 33) {
-			return i+1;
-		}
-	}
-	return 0;
-} // end getLeavingCar
-
-// ***********************************************************************
-// ***********************************************************************
-// driver task
-int driverTask(int argc, char* argv[])
-{
-	char buf[32];
-	Semaphore* driverDone;
-	int myID = atoi(argv[1]);							SWAP;	// get unique drive id
-	// create driver's own semaphore
-	sprintf(buf, "driverDone%d", myID); 				SWAP;
-	driverDone = createSemaphore(buf, BINARY, 0);		SWAP; 	// create notification event
-	// loop waiting for tasks
-	while(1) {
-		myPark.drivers[myID] = 0;						SWAP;
-		SEM_WAIT(wakeupDriver);							SWAP;	// goto sleep
-		if (SEM_TRYLOCK(needDriver)) {					SWAP;	// i’m awake  - driver needed?
-			myPark.drivers[myID] = getLeavingCar();		SWAP;
-			SEM_SIGNAL(driverMutex);					SWAP;
-			SEM_WAIT(mailboxMutex);						SWAP;
-				semaphoreMailbox = driverDone;			SWAP;	// pass notification semaphore
-				SEM_SIGNAL(mailboxReady);				SWAP;
-				SEM_WAIT(mailAcquired);					SWAP;
-			SEM_SIGNAL(mailboxMutex);					SWAP;
-			SEM_WAIT(driverDone);						SWAP;	// drive ride
-		} else if (SEM_TRYLOCK(needTicket)) {			SWAP;	// someone need ticket?
-			myPark.drivers[myID] = -1;					SWAP;
-			SEM_SIGNAL(driverMutex);					SWAP;
-			SEM_WAIT(tickets);							SWAP;	// wait for ticket (counting)
-			SEM_SIGNAL(ticketReady);					SWAP;
-			SEM_WAIT(buyTicket);						SWAP;
-		} else {										SWAP;
-			SEM_SIGNAL(driverMutex);					SWAP;
-			break;
-		}
-	}
-	return 0;
-} // end driverTask
-
-
-//***********************************************************************
 //***********************************************************************
 // Move car in Jurassic Park (if possible)
 //
@@ -446,7 +219,7 @@ int makeMove(int car)
 		// at cross roads 1
 		case 7:
 		{
-			j = (rand()%2) ? 24 : 8;								//SWAP;
+			j = (rand()%2) ? 24 : 8;								SWAP;
 			break;
 		}
 
@@ -456,11 +229,11 @@ int makeMove(int car)
 			// take shorter route if no one in line
 			if (myPark.numInCarLine == 0)
 			{
-				j = 28;												//SWAP;
+				j = 28;												SWAP;
 			}
 			else
 			{
-				j = (rand()%3) ? 28 : 21;							//SWAP;
+				j = (rand()%3) ? 28 : 21;							SWAP;
 			}
 			break;
 		}
@@ -468,14 +241,14 @@ int makeMove(int car)
 		// bridge loop
 		case 23:
 		{
-			j = 1;													//SWAP;
+			j = 1;													SWAP;
 			break;
 		}
 
 		// bridge short route
 		case 27:
 		{
-			j = 20;													//SWAP;
+			j = 20;													SWAP;
 			break;
 		}
 
@@ -484,7 +257,7 @@ int makeMove(int car)
 		{
 			if (myPark.cars[car].passengers == 0)
 			{
-				j++;												//SWAP;
+				j++;												SWAP;
 			}
 			break;
 		}
@@ -492,10 +265,14 @@ int makeMove(int car)
 		// loading car
 		case 33:
 		{
+			// if there is someone in car and noone is in line, proceed
+			//if ((myPark.cars[car].passengers == NUM_SEATS) ||
+			//	 ((myPark.numInCarLine == 0) && myPark.cars[car].passengers))
+
 			// if car is full, proceed into park
 			if (myPark.cars[car].passengers == NUM_SEATS)
 			{
-				j = 0;												//SWAP;
+				j = 0;												SWAP;
 			}
 			break;
 		}
@@ -503,7 +280,7 @@ int makeMove(int car)
 		// all other moves
 		default:
 		{
-			j++;													//SWAP;
+			j++;													SWAP;
 			break;
 		}
 	}
@@ -512,7 +289,7 @@ int makeMove(int car)
 	{
 		if (i != car)
 		{
-			//SWAP;
+			SWAP;
 			if (myPark.cars[i].location == j)
 			{
 				return -1;
@@ -521,10 +298,10 @@ int makeMove(int car)
 	}
 
 	// return 0 if car moved
-	moved = (myPark.cars[car].location == j);					//SWAP;
+	moved = (myPark.cars[car].location == j);					SWAP;
 
 	// make move
-	myPark.cars[car].location = j;								//SWAP;
+	myPark.cars[car].location = j;								SWAP;
 	return moved;
 }
 
@@ -543,8 +320,8 @@ int jurassicDisplayTask(int argc, char* argv[])
 	do
 	{
 		JPARK currentPark;
-		
-		// update every second
+
+   	// update every second
 		SEM_WAIT(tics1sec);											SWAP;
 
 		// take snapshot of park
@@ -616,10 +393,10 @@ void drawPark(JPARK *park)
 
 	int i, j;
 	char svtime[64];						// ascii current time
-	char driver[] = {'T', 'z', 'A', 'B', 'C', 'D' };
+	char driver[] = {'T', 'z', 'G', 'A', 'B', 'C', 'D' };
 	char buf[32];
 	char pk[25][80];
-	char cp[34][3] = {	{2, 29, 0}, {2, 33, 0}, {2, 37, 0}, {2, 41, 0},				// 0-6
+	static int cp[34][3] = {	{2, 29, 0}, {2, 33, 0}, {2, 37, 0}, {2, 41, 0},				// 0-6
 								{2, 45, 0}, {2, 49, 0}, {2, 53, 0},
 								{4, 57, 1},											// 7
 								{8, 59, 0}, {8, 63, 0},								// 8-9
@@ -786,7 +563,7 @@ void drawPark(JPARK *park)
 	{
 		if ((rand()%3) == 1)
 		{
-			memcpy(&pk[dy1+0][-direction1+4], "...", 3);					SWAP;
+			memcpy(&pk[dy1+0][-direction1+4], "...", 3);						SWAP;
 			memcpy(&pk[dy1+1][-direction1+1], "__/|||\\___", 10);			SWAP;
 			memcpy(&pk[dy1+2][-direction1+0], "O  x   x", 8);				SWAP;
 		}
@@ -802,20 +579,20 @@ void drawPark(JPARK *park)
 	// move dinosaur #2
 
 	dy2 = dy2 + (rand()%3) - 1;
-	if (dy2 < D2Upper) dy2 = D2Upper;										SWAP;
-	if (dy2 > D2Lower) dy2 = D2Lower;										SWAP;
-	dy2 = (dy2+9) >= dy1 ? dy1-9 : dy2;										SWAP;
+	if (dy2 < D2Upper) dy2 = D2Upper;											SWAP;
+	if (dy2 > D2Lower) dy2 = D2Lower;											SWAP;
+	dy2 = (dy2+9) >= dy1 ? dy1-9 : dy2;											SWAP;
 
 	if (direction2 > 0)
 	{
-		memcpy(&pk[dy2+0][direction2+7], "_", 1);							SWAP;
-		memcpy(&pk[dy2+1][direction2+6], "/o\\", 3);						SWAP;
+		memcpy(&pk[dy2+0][direction2+7], "_", 1);								SWAP;
+		memcpy(&pk[dy2+1][direction2+6], "/o\\", 3);							SWAP;
 		memcpy(&pk[dy2+2][direction2+4], "</ _<", 5);						SWAP;
-		memcpy(&pk[dy2+3][direction2+3], "</ /", 4);						SWAP;
+		memcpy(&pk[dy2+3][direction2+3], "</ /", 4);							SWAP;
 		memcpy(&pk[dy2+4][direction2+2], "</ ==x", 6);						SWAP;
 		memcpy(&pk[dy2+5][direction2+3], "/  \\", 4);						SWAP;
 		memcpy(&pk[dy2+6][direction2+2], "//)__)", 6);						SWAP;
-		memcpy(&pk[dy2+7][direction2+0], "<<< \\_ \\_", 9);					SWAP;
+		memcpy(&pk[dy2+7][direction2+0], "<<< \\_ \\_", 9);				SWAP;
 		if (++direction2 > D2Right) direction2 = -direction2;				SWAP;
 	}
 	else
@@ -832,10 +609,10 @@ void drawPark(JPARK *park)
 	}
 
 	// draw park
-	CLEAR_SCREEN;															SWAP;
-	printf("\n");															SWAP;
+	CLEAR_SCREEN;																		SWAP;
+	printf("\n");																		SWAP;
 	for (i=0; i<25; i++) printf("\n%s", &pk[i][0]);							SWAP;
-	printf("\n");															SWAP;
+	printf("\n");																		SWAP;
 
 	// driver in only one place at a time
 	for (i=0; i<(NUM_DRIVERS-1); i++)
@@ -897,4 +674,3 @@ int lostVisitorTask(int argc, char* argv[])
 	}
 	return 0;
 } // end lostVisitorTask
-
