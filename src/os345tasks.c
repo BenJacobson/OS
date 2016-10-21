@@ -27,6 +27,7 @@
 #include "os345.h"
 #include "os345signals.h"
 #include "os345pqueue.h"
+#include "os345lc3.h"
 
 
 extern TCB tcb[];							// task control block
@@ -85,9 +86,9 @@ int createTask(char* name,						// task name
 				strcpy(tcb[tid].argv[i], argv[i]);
 			}
 
-			tcb[tid].event = 0;				// suspend semaphore
-			tcb[tid].RPT = 0;					// root page table (project 5)
-			tcb[tid].cdir = CDIR;			// inherit parent cDir (project 6)
+			tcb[tid].RPT = LC3_RPT + ((tid) ? ((tid-1)<<6) : 0);	// root page table (project 5)
+			tcb[tid].event = 0;									// suspend semaphore
+			tcb[tid].cdir = CDIR;								// inherit parent cDir (project 6)
 
 			// define task signals
 			createTaskSigHandlers(tid);
@@ -97,7 +98,7 @@ int createTask(char* name,						// task name
 
 			enqueueTask(readyQueue, tid);
 
-			if (!superMode) swapTask();				// do context switch (if not cli)
+			if (!superMode) swapTask();			// do context switch (if not cli)
 			return tid;							// return tcb index (curTask)
 		}
 	}

@@ -58,17 +58,21 @@ extern long accessPage(int pnum, int frame, int rwnFlg);
 int lc3Task(int argc, char* argv[])
 {
 	int DR, oldpc, ir;   					// local variables
-   int i;
+	int i;
 
 	int LC3_REGS[8];							// General purpose registers
-	int LC3_CC = 0x02;						// NZP condition codes
+	int LC3_CC = 0x02;							// NZP condition codes
 	int LC3_PC = 0x3000;						// program counter
 	int ips = 0;								// instructions per swap
 
 	// Initialize LC3 Simulator
+	// tcb[tid].RPT = rpta;
+	// for (int i=0; i<LC3_FRAME_SIZE*2; i++) {
+	// 	memory[rpta] = CLEAR_DEFINED(memory[rpta++]);
+	// }
 	// clear registers
 	for (i=0; i<8; i++) LC3_REGS[i] = 0;
-   // set condition codes to nZp
+	// set condition codes to nZp
 	LC3_CC = 0x02;
 	// load program
 	if ((LC3_PC = loadLC3Program(argv)) < 0) return -1;
@@ -109,10 +113,10 @@ int lc3Task(int argc, char* argv[])
 	 			break;
 
 			case LC3_BR:                  // BR instruction
-	         if (ir == 0)
-            {  printf("\n**(%d) Illegal instruction 0x%04x at 0x%04x (frame %d)", LC3_TID, ir, LC3_PC, LC3_PC>>6);
-   		      return -1;                 // abort!
-            }
+				if (ir == 0)
+				{  printf("\n**(%d) Illegal instruction 0x%04x at 0x%04x (frame %d)", LC3_TID, ir, LC3_PC, LC3_PC>>6);
+					return -1;                 // abort!
+				}
 				if ((LC3_CC&0x04 && GET_N) || (LC3_CC&0x02 && GET_Z) || (LC3_CC&0x01 && GET_P))
 				   LC3_PC = LC3_PC + SEXT9(ir);
 				if (LC3_DEBUG&0x01)

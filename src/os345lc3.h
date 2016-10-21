@@ -9,9 +9,9 @@
 //             x04
 //             x08   paging
 
-#define LC3_DEBUG				0
-#define LC3_MAX_HEX_SIZE   8192
-#define LC3_TID				curTask
+#define LC3_DEBUG               0
+#define LC3_MAX_HEX_SIZE        8192
+#define LC3_TID                 curTask
 
 // maximum LC-3 memory (2^16) words
 #define LC3_MAX_MEMORY 65536
@@ -43,6 +43,7 @@
 #define RPTI(va)          (((va)&BITS_15_11_MASK)>>10)
 #define UPTI(va)          (((va)&BITS_10_6_MASK)>>5)
 #define FRAMEOFFSET(va)   ((va)&BITS_5_0_MASK)
+#define FRAMEADDR(va)     (FRAMEOFFSET(va)<<6)
 
 // definitions within a root or user table page
 #define DEFINED(e1)       ((e1)&BIT_15_MASK)

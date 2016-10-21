@@ -46,12 +46,48 @@ extern int curTask;					// current task #
 
 int getFrame(int notme)
 {
+	static bool usingRPTPointer = TRUE;
+	static unsigned short clockRPTPointer = LC3_RPT;
+	static unsigned short clockUPTPointer;
 	int frame;
 	frame = getAvailableFrame();
-	if (frame >=0) return frame;
+	if (frame >=0)
+		return frame;
 
 	// run clock
-	printf("\nWe're toast!!!!!!!!!!!!");
+	while (1) {
+		// what am I ponting at?
+		if (usingRPTPointer) {
+			if (DEFINED(memory[clockRPTPointer])) {
+				if (REFERENCED(memory[clockRPTPointer])) {
+					CLEAR_REF(memory[clockRPTPointer]);
+				} else {
+					usingRPTPointer = FALSE;
+					clockUPTPointer = FRAMEADDR(memory[clockRPTPointer]);
+				}
+			}
+		} else {
+			if (DEFINED(memory[clockUPTPointer])) {
+				if (REFERENCED(memory[clockRPTPointer])) {
+					CLEAR_REF(memory[clockRPTPointer]);
+				} else {
+					usingRPTPointer = FALSE;
+					clockUPTPointer = FRAMEADDR(memory[clockRPTPointer]);
+				}
+			}
+		}
+
+		// move clock pointer
+		if (usingRPTPointer) {
+			clockRPTPointer += 2;
+			if (clockRPTPointer >= LC3_RPT_END)
+				clockRPTPointer = LC3_RPT;
+		} else {
+			clockUPTPointer += 2;
+			if (clockUPTPointer%LC3_FRAME_SIZE==0)
+				usingRPTPointer = TRUE;
+		}
+	}
 
 	return frame;
 }
@@ -72,10 +108,7 @@ int getFrame(int notme)
 //  / / / /     / 	             / /       /
 // F D R P - - f f|f f f f f f f f|S - - - p p p p|p p p p p p p p
 
-#define MMU_ENABLE	0
-
-unsigned short int *getMemAdr(int va, int rwFlg)
-{
+unsigned short int *getMemAdr(int va, int rwFlg) {
 	unsigned short int pa;
 	int rpta, rpte1, rpte2;
 	int upta, upte1, upte2;
@@ -83,24 +116,35 @@ unsigned short int *getMemAdr(int va, int rwFlg)
 
 	// turn off virtual addressing for system RAM
 	if (va < 0x3000) return &memory[va];
-#if MMU_ENABLE
+	// get physical address
 	rpta = tcb[curTask].RPT + RPTI(va);		// root page table address
 	rpte1 = memory[rpta];					// FDRP__ffffffffff
 	rpte2 = memory[rpta+1];					// S___pppppppppppp
-	if (DEFINED(rpte1))	{ }					// rpte defined
-		else			{ }					// rpte undefined
+	if (DEFINED(rpte1))	{					// rpte defined
+		// ? do nothing ?
+	} else if (PAGED(rpte2)) {				// rpte in swap space
+		printf("\n!!!PAGED!!!");
+	} else {								// get frame for upt
+		rptFrame = getFrame(-1);
+		rpte1 |= FRAME(rptFrame);
+		rpte1 = SET_DEFINED(rpte1);
+	}
 	memory[rpta] = SET_REF(rpte1);			// set rpt frame access bit
 
 	upta = (FRAME(rpte1)<<6) + UPTI(va);	// user page table address
 	upte1 = memory[upta]; 					// FDRP__ffffffffff
 	upte2 = memory[upta+1]; 				// S___pppppppppppp
-	if (DEFINED(upte1))	{ }					// upte defined
-		else			{ }					// upte undefined
+	if (DEFINED(upte1))	{					// upte defined
+		// ? do nothing ?
+	} else if (PAGED(upte2)) {				// upte in swap space
+		printf("\n!!!PAGED!!!");
+	} else {								// get frame for data
+		uptFrame = getFrame(-1);
+		upte1 |= FRAME(uptFrame);
+		upte1 = SET_DEFINED(upte1);
+	}
 	memory[upta] = SET_REF(upte1); 			// set upt frame access bit
 	return &memory[(FRAME(upte1)<<6) + FRAMEOFFSET(va)];
-#else
-	return &memory[va];
-#endif
 } // end getMemAdr
 
 
