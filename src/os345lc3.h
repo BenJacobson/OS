@@ -50,7 +50,7 @@
 #define REFERENCED(e1)    ((e1)&BIT_13_MASK)
 #define PINNED(e1)        ((e1)&BIT_12_MASK)
 #define FRAME(e1)         ((e1)&BITS_9_0_MASK)
-#define FRAMEADDR(e1)     (FRAME(e2)<<6)
+#define FRAMEADDR(e1)     (FRAME((e1))<<6)
 #define PAGED(e2)         ((e2)&BIT_15_MASK)
 #define SWAPPAGE(e2)      ((e2)&BITS_12_0_MASK)
 

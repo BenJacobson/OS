@@ -52,24 +52,29 @@ int runClock() {
 	static unsigned short clockUPTPointer;
 	bool done = FALSE;
 	int frame;
+	unsigned short int rptEntry, uptEntry, swapEntry;
 	while (!done) {
+		rptEntry = memory[clockRPTPointer];
+		uptEntry = memory[clockUPTPointer];
 		// check what I'm pointing at
 		if (usingRPTPointer) {
-			if (DEFINED(memory[clockRPTPointer])) {
-				if (REFERENCED(memory[clockRPTPointer])) {
-					CLEAR_REF(memory[clockRPTPointer]);
+			if (DEFINED(rptEntry)) {
+				if (REFERENCED(rptEntry)) {
+					memory[clockRPTPointer] = rptEntry = CLEAR_REF(rptEntry);
 				} else {
 					usingRPTPointer = FALSE;
-					clockUPTPointer = FRAMEADDR(memory[clockRPTPointer]);
+					clockUPTPointer = FRAMEADDR(rptEntry);
 					continue;
 				}
 			}
 		} else {
-			if (DEFINED(memory[clockUPTPointer])) {
-				if (REFERENCED(memory[clockUPTPointer])) {
-					CLEAR_REF(memory[clockUPTPointer]);
+			if (DEFINED(uptEntry)) {
+				if (REFERENCED(uptEntry)) {
+					memory[clockUPTPointer] = uptEntry = CLEAR_REF(uptEntry);
 				} else {
-					frame = FRAME(memory[clockUPTPointer]);
+					swapEntry = memory[clockUPTPointer + 1];
+					memory[clockUPTPointer + 1] = SET_PAGED(swapEntry);
+					frame = FRAME(uptEntry);
 					done = TRUE;
 				}
 			}
@@ -79,8 +84,10 @@ int runClock() {
 			clockUPTPointer += 2;										// go to next page table entry
 			if (clockUPTPointer%LC3_FRAME_SIZE==0) {					// if you finished the frame
 				usingRPTPointer = TRUE;									// go back out to the root page table
-				if (!done && !PINNED(memory[clockUPTPointer])) {		// if the user page table you just left has no allocated pages, swap it out
-					frame = FRAME(memory[clockRPTPointer]);				// set the frame address of the user page table we left
+				if (!done && !PINNED(rptEntry)) {						// if the user page table you just left has no allocated pages, swap it out
+					swapEntry = memory[clockRPTPointer + 1];
+					memory[clockRPTPointer + 1] = SET_PAGED(swapEntry);
+					frame = FRAME(rptEntry);							// set the frame address of the user page table we left
 					done = TRUE;										// we're done
 				}
 			}
@@ -95,16 +102,17 @@ int runClock() {
 }
 
 int getFrame(int notme) {
-	int frame, *frameMem;
+	int frame, frameMem, i;
 	frame = getAvailableFrame();
 	if (frame >=0)
 		return frame;
 
 	frame = runClock();
 	accessPage( -1, frame, PAGE_NEW_WRITE);
+
 	frameMem = FRAMEADDR(frame);
 	for (i=0; i<LC3_FRAME_SIZE; i++)
-		*frameMem++ = 0;
+		memory[frameMem++] = 0;
 	return frame;
 }
 // **************************************************************************
@@ -137,13 +145,14 @@ unsigned short int *getMemAdr(int va, int rwFlg) {
 	rpte1 = memory[rpta];					// FDRP__ffffffffff
 	rpte2 = memory[rpta+1];					// S___pppppppppppp
 	if (DEFINED(rpte1))	{					// rpte defined
-		// ? do nothing ?
+		rpte1 = SET_PINNED(rpte1);
 	} else if (PAGED(rpte2)) {				// rpte in swap space
 		printf("\n!!!PAGED!!!");
 	} else {								// get frame for upt
 		rptFrame = getFrame(-1);
 		rpte1 |= FRAME(rptFrame);
 		rpte1 = SET_DEFINED(rpte1);
+		rpte1 = SET_PINNED(rpte1);
 	}
 	memory[rpta] = SET_REF(rpte1);			// set rpt frame access bit
 
@@ -160,7 +169,8 @@ unsigned short int *getMemAdr(int va, int rwFlg) {
 		upte1 = SET_DEFINED(upte1);
 	}
 	memory[upta] = SET_REF(upte1); 			// set upt frame access bit
-	return &memory[(FRAME(upte1)<<6) + FRAMEOFFSET(va)];
+	int physical_address = (FRAME(upte1)<<6) + FRAMEOFFSET(va);
+	return &memory[physical_address];
 } // end getMemAdr
 
 
