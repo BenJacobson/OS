@@ -45,7 +45,6 @@ int getCharacter(void);
 
 extern unsigned short int *getMemAdr(int va, int rwFlg);
 extern void setFrameTableBits(int flg, int sf, int ef);
-extern long accessPage(int pnum, int frame, int rwnFlg);
 
 // ***********************************************************************
 // ***********************************************************************

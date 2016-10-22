@@ -137,7 +137,7 @@ int P4_vmaccess(int argc, char* argv[])
 			}
 		}
 	}
-	printf("\nPages = %ld", accessPage(0, 0, PAGE_GET_SIZE));
+	printf("\nPages = %d", accessPage(0, 0, PAGE_GET_SIZE));
 	return 0;
 } // end P4_vmaccess
 
@@ -449,7 +449,7 @@ void displayPage(int pn)
    short int *buffer;
    int i, ma;
    printf("\nPage %d", pn);
-   buffer = (short int*)accessPage(pn, pn, 3);
+   buffer = (short int*)(long)accessPage(pn, pn, 3);
    for (ma = 0; ma < 64;)
 	{
       printf("\n0x%04x:", ma);

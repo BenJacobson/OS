@@ -43,7 +43,6 @@
 #define RPTI(va)          (((va)&BITS_15_11_MASK)>>10)
 #define UPTI(va)          (((va)&BITS_10_6_MASK)>>5)
 #define FRAMEOFFSET(va)   ((va)&BITS_5_0_MASK)
-#define FRAMEADDR(va)     (FRAMEOFFSET(va)<<6)
 
 // definitions within a root or user table page
 #define DEFINED(e1)       ((e1)&BIT_15_MASK)
@@ -51,6 +50,7 @@
 #define REFERENCED(e1)    ((e1)&BIT_13_MASK)
 #define PINNED(e1)        ((e1)&BIT_12_MASK)
 #define FRAME(e1)         ((e1)&BITS_9_0_MASK)
+#define FRAMEADDR(e1)     (FRAME(e2)<<6)
 #define PAGED(e2)         ((e2)&BIT_15_MASK)
 #define SWAPPAGE(e2)      ((e2)&BITS_12_0_MASK)
 
@@ -219,7 +219,7 @@ typedef int PC;
 void initLC3Memory(int startFrame, int endFrame);
 
 unsigned short int *getMemAdr(int va, int rwFlg);
-long accessPage(int pnum, int frame, int rwnFlg);
+int accessPage(int pnum, int frame, int rwnFlg);
 void setFrameTableBits(int flg, int sf, int ef);
 int getAvailableFrame();
 void outPTE(char* s, int pte);

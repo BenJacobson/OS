@@ -44,19 +44,16 @@ int getAvailableFrame(void);
 extern TCB tcb[];					// task control block
 extern int curTask;					// current task #
 
-int getFrame(int notme)
-{
+//////////////////////////////////
+// Find the next page to swap out
+int runClock() {
 	static bool usingRPTPointer = TRUE;
 	static unsigned short clockRPTPointer = LC3_RPT;
 	static unsigned short clockUPTPointer;
+	bool done = FALSE;
 	int frame;
-	frame = getAvailableFrame();
-	if (frame >=0)
-		return frame;
-
-	// run clock
-	while (1) {
-		// what am I ponting at?
+	while (!done) {
+		// check what I'm pointing at
 		if (usingRPTPointer) {
 			if (DEFINED(memory[clockRPTPointer])) {
 				if (REFERENCED(memory[clockRPTPointer])) {
@@ -64,31 +61,50 @@ int getFrame(int notme)
 				} else {
 					usingRPTPointer = FALSE;
 					clockUPTPointer = FRAMEADDR(memory[clockRPTPointer]);
+					continue;
 				}
 			}
 		} else {
 			if (DEFINED(memory[clockUPTPointer])) {
-				if (REFERENCED(memory[clockRPTPointer])) {
-					CLEAR_REF(memory[clockRPTPointer]);
+				if (REFERENCED(memory[clockUPTPointer])) {
+					CLEAR_REF(memory[clockUPTPointer]);
 				} else {
-					usingRPTPointer = FALSE;
-					clockUPTPointer = FRAMEADDR(memory[clockRPTPointer]);
+					frame = FRAME(memory[clockUPTPointer]);
+					done = TRUE;
 				}
 			}
 		}
-
 		// move clock pointer
-		if (usingRPTPointer) {
-			clockRPTPointer += 2;
-			if (clockRPTPointer >= LC3_RPT_END)
-				clockRPTPointer = LC3_RPT;
-		} else {
-			clockUPTPointer += 2;
-			if (clockUPTPointer%LC3_FRAME_SIZE==0)
-				usingRPTPointer = TRUE;
+ 		if (!usingRPTPointer) {											// if we are looking at a user page table
+			clockUPTPointer += 2;										// go to next page table entry
+			if (clockUPTPointer%LC3_FRAME_SIZE==0) {					// if you finished the frame
+				usingRPTPointer = TRUE;									// go back out to the root page table
+				if (!done && !PINNED(memory[clockUPTPointer])) {		// if the user page table you just left has no allocated pages, swap it out
+					frame = FRAME(memory[clockRPTPointer]);				// set the frame address of the user page table we left
+					done = TRUE;										// we're done
+				}
+			}
+		}
+		if (usingRPTPointer) {											// if we are looking a root page table
+			clockRPTPointer += 2;										// go to the next apge table entry
+			if (clockRPTPointer >= LC3_RPT_END)							// if we hit the end of root page table area
+				clockRPTPointer = LC3_RPT;								// go back to the beginning
 		}
 	}
+	return frame;														// return the frame number found above
+}
 
+int getFrame(int notme) {
+	int frame, *frameMem;
+	frame = getAvailableFrame();
+	if (frame >=0)
+		return frame;
+
+	frame = runClock();
+	accessPage( -1, frame, PAGE_NEW_WRITE);
+	frameMem = FRAMEADDR(frame);
+	for (i=0; i<LC3_FRAME_SIZE; i++)
+		*frameMem++ = 0;
 	return frame;
 }
 // **************************************************************************
@@ -203,7 +219,7 @@ int getAvailableFrame()
 
 // **************************************************************************
 // read/write to swap space
-long accessPage(int pnum, int frame, int rwnFlg)
+int accessPage(int pnum, int frame, int rwnFlg)
 {
 	static int nextPage;						// swap page size
 	static int pageReads;						// page reads
@@ -236,7 +252,7 @@ long accessPage(int pnum, int frame, int rwnFlg)
 			return pageWrites;
 
 		case PAGE_GET_ADR:                    	// return page address
-			return (long)(&swapMemory[pnum<<6]);
+			return (int)(long)(&swapMemory[pnum<<6]);
 
 		case PAGE_NEW_WRITE:                   // new write (Drops thru to write old)
 			pnum = nextPage++;
