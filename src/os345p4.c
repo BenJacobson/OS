@@ -117,7 +117,12 @@ int P4_vmaccess(int argc, char* argv[])
 {
 	unsigned short int adr, rpt, upt;
 
-	printf("\nValidate arguments...");	// ?? validate arguments
+	printf("\nValidate arguments...");
+	if (argc < 2) {
+		printf("\nPass a virtual address as the first argument");
+		return 1;
+	}
+
 	adr = INTEGER(argv[1]);
 
 	printf(" = %04lx", getMemAdr(adr, 1)-&MEMWORD(0));
@@ -150,7 +155,12 @@ int P4_dumpPageMemory(int argc, char* argv[])
 {
 	int page;
 
-	printf("\nValidate arguments...");	// ?? validate arguments
+	printf("\nValidate arguments...");
+	if (argc < 2) {
+		printf("\nPass a page number as the first argument");
+		return 1;
+	}
+
 	page = INTEGER(argv[1]);
 
 	displayPage(page);
@@ -292,7 +302,7 @@ int P4_userPageTable(int argc, char* argv[])
 	rpt = INTEGER(argv[1]);
 	upt = INTEGER(argv[2]);
 
-	displayUPT(rpt, upt>>11);
+	displayUPT(rpt, upt);
 	return 0;
 } // P4_userPageTable
 
@@ -326,21 +336,25 @@ void displayRPT(int rptNum)
 // display contents of UPT
 void displayUPT(int rptNum, int uptNum)
 {
-   unsigned short int rpte, upt, upte1, upte2, uptba;
-   rptNum &= BITS_3_0_MASK;
-   uptNum &= BITS_4_0_MASK;
+	unsigned short int rptea, rpte, upt, upte1, upte2, uptba;
+	rptNum &= BITS_3_0_MASK;
+	uptNum &= BITS_4_0_MASK;
 
-   // index to process <rptNum>'s rpt + <uptNum> index
-   rpte = MEMWORD(((LC3_RPT + (rptNum<<6)) + uptNum*2));
-   // calculate upt's base address
-   uptba = uptNum<<11;
-   if (DEFINED(rpte)) upt = FRAME(rpte)<<6;
-   else
-   {  printf("\nUndefined!");
-      return;
-   }
-   displayPT(upt, uptba, 1<<6);
-   return;
+	// index to process <rptNum>'s rpt + <uptNum> index
+	rptea = ((LC3_RPT + (rptNum<<6)) + uptNum*2);
+	printf("\nRPT address %x", rptea);
+	printf("\n test %d", uptNum*2);
+	rpte = MEMWORD(rptea);
+	// calculate upt's base address
+	uptba = uptNum<<11;
+	if (DEFINED(rpte)) {
+		upt = FRAME(rpte)<<6;
+	} else {
+		printf("\nUndefined!");
+		return;
+	}
+	displayPT(upt, uptba, 1<<6);
+	return;
 } // end displayUPT
 
 

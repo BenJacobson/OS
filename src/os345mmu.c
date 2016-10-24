@@ -51,7 +51,7 @@ int runClock() {
 	static unsigned short clockRPTPointer = LC3_RPT;
 	static unsigned short clockUPTPointer;
 	bool done = FALSE;
-	int frame;
+	int frame, pnum;
 	unsigned short int rptEntry, uptEntry, swapEntry;
 	while (!done) {
 		rptEntry = memory[clockRPTPointer];
@@ -60,8 +60,10 @@ int runClock() {
 		if (usingRPTPointer) {
 			if (DEFINED(rptEntry)) {
 				if (REFERENCED(rptEntry)) {
+					printf("\nChecking RPT %x ... %d REFERENCED", clockRPTPointer, FRAME(rptEntry));
 					memory[clockRPTPointer] = rptEntry = CLEAR_REF(rptEntry);
 				} else {
+					printf("\nChecking RPT %x ... %d UNREFERENCED", clockRPTPointer, FRAME(rptEntry));
 					usingRPTPointer = FALSE;
 					clockUPTPointer = FRAMEADDR(rptEntry);
 					continue;
@@ -70,10 +72,13 @@ int runClock() {
 		} else {
 			if (DEFINED(uptEntry)) {
 				if (REFERENCED(uptEntry)) {
+					printf("\nChecking UPT %x ... %d REFERENCED", clockUPTPointer, FRAME(uptEntry));
 					memory[clockUPTPointer] = uptEntry = CLEAR_REF(uptEntry);
 				} else {
-					swapEntry = memory[clockUPTPointer + 1];
+					printf("\nChecking UPT %x ... %d UNREFERENCED", clockUPTPointer, FRAME(uptEntry));
+					swapEntry = accessPage( -1, frame, PAGE_NEW_WRITE);
 					memory[clockUPTPointer + 1] = SET_PAGED(swapEntry);
+					memory[clockUPTPointer] = CLEAR_DEFINED(memory[clockUPTPointer]);
 					frame = FRAME(uptEntry);
 					done = TRUE;
 				}
@@ -85,8 +90,9 @@ int runClock() {
 			if (clockUPTPointer%LC3_FRAME_SIZE==0) {					// if you finished the frame
 				usingRPTPointer = TRUE;									// go back out to the root page table
 				if (!done && !PINNED(rptEntry)) {						// if the user page table you just left has no allocated pages, swap it out
-					swapEntry = memory[clockRPTPointer + 1];
-					memory[clockRPTPointer + 1] = SET_PAGED(swapEntry);
+					swapEntry = accessPage( -1, frame, PAGE_NEW_WRITE);	// move the page to swap space
+					memory[clockRPTPointer + 1] = SET_PAGED(swapEntry);	// update the rpte to reflect page info
+					memory[clockRPTPointer] = CLEAR_DEFINED(memory[clockRPTPointer]);
 					frame = FRAME(rptEntry);							// set the frame address of the user page table we left
 					done = TRUE;										// we're done
 				}
@@ -98,18 +104,22 @@ int runClock() {
 				clockRPTPointer = LC3_RPT;								// go back to the beginning
 		}
 	}
+	printf("\nSwapping out %d", frame);
 	return frame;														// return the frame number found above
 }
 
 int getFrame(int notme) {
-	int frame, frameMem, i;
+	int frame, frameMem, pnum, i;
+	// look for unused frames
 	frame = getAvailableFrame();
-	if (frame >=0)
+	if (frame >=0) {
+		printf("\nFound free frame %d", frame);
 		return frame;
-
+	}
+	// find a frame to swap out
 	frame = runClock();
-	accessPage( -1, frame, PAGE_NEW_WRITE);
-
+	pnum = accessPage( -1, frame, PAGE_NEW_WRITE);
+	// init memory to not defined
 	frameMem = FRAMEADDR(frame);
 	for (i=0; i<LC3_FRAME_SIZE; i++)
 		memory[frameMem++] = 0;
@@ -149,6 +159,7 @@ unsigned short int *getMemAdr(int va, int rwFlg) {
 	} else if (PAGED(rpte2)) {				// rpte in swap space
 		printf("\n!!!PAGED!!!");
 	} else {								// get frame for upt
+		printf("\nGet a new frame for UPT");
 		rptFrame = getFrame(-1);
 		rpte1 |= FRAME(rptFrame);
 		rpte1 = SET_DEFINED(rpte1);
@@ -164,7 +175,8 @@ unsigned short int *getMemAdr(int va, int rwFlg) {
 	} else if (PAGED(upte2)) {				// upte in swap space
 		printf("\n!!!PAGED!!!");
 	} else {								// get frame for data
-		uptFrame = getFrame(-1);
+		printf("\nGet a new frame for data");
+		uptFrame = getFrame(FRAME(rpte1));
 		upte1 |= FRAME(uptFrame);
 		upte1 = SET_DEFINED(upte1);
 	}
