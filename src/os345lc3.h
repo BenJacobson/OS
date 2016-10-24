@@ -67,6 +67,7 @@
 #define CLEAR_DIRTY(e1)   ((e1)&~BIT_14_MASK)
 #define CLEAR_REF(e1)     ((e1)&~BIT_13_MASK)
 #define CLEAR_PINNED(e1)  ((e1)&~BIT_12_MASK)
+#define CLEAR_PAGED(e2)   ((e2)&~BIT_15_MASK)
 
 // ---------------------------------------------------------------------
 // Bit Masks

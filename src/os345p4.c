@@ -30,7 +30,7 @@
 
 // ***********************************************************************
 // project 4 variables
-extern TCB tcb[];							// task control block
+extern TCB tcb[];						// task control block
 extern int curTask;						// current task #
 
 extern int memAccess;
@@ -115,7 +115,7 @@ int P4_dumpLC3Mem(int argc, char* argv[])
 // vma <a>
 int P4_vmaccess(int argc, char* argv[])
 {
-	unsigned short int adr, rpt, upt;
+	unsigned short int vadr, *padr, rpt, upt;
 
 	printf("\nValidate arguments...");
 	if (argc < 2) {
@@ -123,9 +123,10 @@ int P4_vmaccess(int argc, char* argv[])
 		return 1;
 	}
 
-	adr = INTEGER(argv[1]);
+	vadr = INTEGER(argv[1]);
+	padr = getMemAdr(vadr, 1);
 
-	printf(" = %04lx", getMemAdr(adr, 1)-&MEMWORD(0));
+	printf("\n%04x = %04lx", vadr, padr-&MEMWORD(0));
 	for (rpt = 0; rpt < 64; rpt+=2)
 	{
 		if (MEMWORD(rpt+TASK_RPT) || MEMWORD(rpt+TASK_RPT+1))
@@ -143,6 +144,13 @@ int P4_vmaccess(int argc, char* argv[])
 		}
 	}
 	printf("\nPages = %d", accessPage(0, 0, PAGE_GET_SIZE));
+
+	if (argc < 3) {
+		printf("\nValue %d", *padr);
+	} else {
+		*padr = INTEGER(argv[2]);
+	}
+
 	return 0;
 } // end P4_vmaccess
 

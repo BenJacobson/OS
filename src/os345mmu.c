@@ -28,6 +28,8 @@
 #include "os345.h"
 #include "os345lc3.h"
 
+#define DEBUG_LEVEL 1
+
 // ***********************************************************************
 // mmu variables
 
@@ -52,78 +54,84 @@ int runClock() {
 	static unsigned short clockUPTPointer;
 	bool done = FALSE;
 	int frame, pnum;
-	unsigned short int rptEntry, uptEntry, swapEntry;
+	unsigned short int rpte1, upte1, rpte2, upte2, swapEntry;
 	while (!done) {
-		rptEntry = memory[clockRPTPointer];
-		uptEntry = memory[clockUPTPointer];
+		rpte1 = memory[clockRPTPointer];
+		upte1 = memory[clockUPTPointer];
 		// check what I'm pointing at
 		if (usingRPTPointer) {
-			if (DEFINED(rptEntry)) {
-				if (REFERENCED(rptEntry)) {
-					printf("\nChecking RPT %x ... %d REFERENCED", clockRPTPointer, FRAME(rptEntry));
-					memory[clockRPTPointer] = rptEntry = CLEAR_REF(rptEntry);
+			if (DEFINED(rpte1)) {
+				if (REFERENCED(rpte1)) {
+					if (DEBUG_LEVEL) printf("\nChecking RPT %x ... %d REFERENCED", clockRPTPointer, FRAME(rpte1));
+					memory[clockRPTPointer] = rpte1 = CLEAR_REF(rpte1);
 				} else {
-					printf("\nChecking RPT %x ... %d UNREFERENCED", clockRPTPointer, FRAME(rptEntry));
+					if (DEBUG_LEVEL) printf("\nChecking RPT %x ... %d UNREFERENCED", clockRPTPointer, FRAME(rpte1));
 					usingRPTPointer = FALSE;
-					clockUPTPointer = FRAMEADDR(rptEntry);
+					memory[clockRPTPointer] = rpte1 = CLEAR_PINNED(rpte1);
+					clockUPTPointer = FRAMEADDR(rpte1);
 					continue;
 				}
 			}
 		} else {
-			if (DEFINED(uptEntry)) {
-				if (REFERENCED(uptEntry)) {
-					printf("\nChecking UPT %x ... %d REFERENCED", clockUPTPointer, FRAME(uptEntry));
-					memory[clockUPTPointer] = uptEntry = CLEAR_REF(uptEntry);
+			if (DEFINED(upte1)) {
+				memory[clockRPTPointer] = rpte1 = SET_PINNED(rpte1);
+				if (REFERENCED(upte1)) {
+					if (DEBUG_LEVEL) printf("\nChecking UPT %x ... %d REFERENCED", clockUPTPointer, FRAME(upte1));
+					memory[clockUPTPointer] = upte1 = CLEAR_REF(upte1);
 				} else {
-					printf("\nChecking UPT %x ... %d UNREFERENCED", clockUPTPointer, FRAME(uptEntry));
-					swapEntry = accessPage( -1, frame, PAGE_NEW_WRITE);
-					memory[clockUPTPointer + 1] = SET_PAGED(swapEntry);
+					if (DEBUG_LEVEL) printf("\nChecking UPT %x ... %d UNREFERENCED", clockUPTPointer, FRAME(upte1));
+					frame = FRAME(upte1);
+					upte2 = memory[clockUPTPointer + 1];
+					if (PAGED(upte2)) {
+						accessPage(SWAPPAGE(upte2), frame, PAGE_OLD_WRITE);
+					} else {
+						swapEntry = accessPage(-1, frame, PAGE_NEW_WRITE);
+						memory[clockUPTPointer + 1] = SET_PAGED(swapEntry);
+					}
 					memory[clockUPTPointer] = CLEAR_DEFINED(memory[clockUPTPointer]);
-					frame = FRAME(uptEntry);
 					done = TRUE;
 				}
 			}
 		}
 		// move clock pointer
- 		if (!usingRPTPointer) {											// if we are looking at a user page table
-			clockUPTPointer += 2;										// go to next page table entry
-			if (clockUPTPointer%LC3_FRAME_SIZE==0) {					// if you finished the frame
-				usingRPTPointer = TRUE;									// go back out to the root page table
-				if (!done && !PINNED(rptEntry)) {						// if the user page table you just left has no allocated pages, swap it out
-					swapEntry = accessPage( -1, frame, PAGE_NEW_WRITE);	// move the page to swap space
-					memory[clockRPTPointer + 1] = SET_PAGED(swapEntry);	// update the rpte to reflect page info
+ 		if (!usingRPTPointer) {															// if we are looking at a user page table
+			clockUPTPointer += 2;														// go to next page table entry
+			if (clockUPTPointer%LC3_FRAME_SIZE==0) {									// if you finished the frame
+				usingRPTPointer = TRUE;													// go back out to the root page table
+				if (!done && !PINNED(rpte1)) {											// if the user page table you just left has no allocated pages, swap it out
+					frame = FRAME(rpte1);												// set the frame address of the user page table we left
+					rpte2 = memory[clockRPTPointer + 1];
+					if (PAGED(rpte2)) {
+						accessPage(SWAPPAGE(rpte2), frame, PAGE_OLD_WRITE);
+					} else {
+						swapEntry = accessPage(-1, frame, PAGE_NEW_WRITE);
+						memory[clockRPTPointer + 1] = SET_PAGED(swapEntry);
+					}
 					memory[clockRPTPointer] = CLEAR_DEFINED(memory[clockRPTPointer]);
-					frame = FRAME(rptEntry);							// set the frame address of the user page table we left
-					done = TRUE;										// we're done
+					done = TRUE;														// we're done
 				}
 			}
 		}
-		if (usingRPTPointer) {											// if we are looking a root page table
-			clockRPTPointer += 2;										// go to the next apge table entry
-			if (clockRPTPointer >= LC3_RPT_END)							// if we hit the end of root page table area
-				clockRPTPointer = LC3_RPT;								// go back to the beginning
+		if (usingRPTPointer) {															// if we are looking a root page table
+			clockRPTPointer += 2;														// go to the next apge table entry
+			if (clockRPTPointer >= LC3_RPT_END)											// if we hit the end of root page table area
+				clockRPTPointer = LC3_RPT;												// go back to the beginning
 		}
 	}
-	printf("\nSwapping out %d", frame);
-	return frame;														// return the frame number found above
+	if (DEBUG_LEVEL) printf("\nSwapping out %d", frame);
+	return frame;																		// return the frame number found above
 }
 
 int getFrame(int notme) {
-	int frame, frameMem, pnum, i;
+	int frame, i;
 	// look for unused frames
 	frame = getAvailableFrame();
 	if (frame >=0) {
-		printf("\nFound free frame %d", frame);
+		if (DEBUG_LEVEL) printf("\nFound free frame %d", frame);
 		return frame;
 	}
 	// find a frame to swap out
-	frame = runClock();
-	pnum = accessPage( -1, frame, PAGE_NEW_WRITE);
-	// init memory to not defined
-	frameMem = FRAMEADDR(frame);
-	for (i=0; i<LC3_FRAME_SIZE; i++)
-		memory[frameMem++] = 0;
-	return frame;
+	return runClock();
 }
 // **************************************************************************
 // **************************************************************************
@@ -148,6 +156,8 @@ unsigned short int *getMemAdr(int va, int rwFlg) {
 	int upta, upte1, upte2;
 	int rptFrame, uptFrame;
 
+	if (DEBUG_LEVEL > 1) printf("\nAccess to %x", va);
+
 	// turn off virtual addressing for system RAM
 	if (va < 0x3000) return &memory[va];
 	// get physical address
@@ -157,13 +167,17 @@ unsigned short int *getMemAdr(int va, int rwFlg) {
 	if (DEFINED(rpte1))	{					// rpte defined
 		rpte1 = SET_PINNED(rpte1);
 	} else if (PAGED(rpte2)) {				// rpte in swap space
-		printf("\n!!!PAGED!!!");
-	} else {								// get frame for upt
-		printf("\nGet a new frame for UPT");
+		if (DEBUG_LEVEL) printf("\nBring the upt frame back from swap space");
 		rptFrame = getFrame(-1);
 		rpte1 |= FRAME(rptFrame);
 		rpte1 = SET_DEFINED(rpte1);
-		rpte1 = SET_PINNED(rpte1);
+		rpte2 = CLEAR_PAGED(rpte2);
+		accessPage(SWAPPAGE(rpte2), FRAME(rpte1), PAGE_READ);
+	} else {								// get frame for upt
+		if (DEBUG_LEVEL) printf("\nGet a new frame for UPT");
+		rptFrame = getFrame(-1);
+		rpte1 |= FRAME(rptFrame);
+		rpte1 = SET_DEFINED(rpte1);
 	}
 	memory[rpta] = SET_REF(rpte1);			// set rpt frame access bit
 
@@ -173,9 +187,14 @@ unsigned short int *getMemAdr(int va, int rwFlg) {
 	if (DEFINED(upte1))	{					// upte defined
 		// ? do nothing ?
 	} else if (PAGED(upte2)) {				// upte in swap space
-		printf("\n!!!PAGED!!!");
+		if (DEBUG_LEVEL) printf("\nBring the data frame back from swap space");
+		uptFrame = getFrame(FRAME(rpte1));
+		upte1 |= FRAME(uptFrame);
+		upte1 = SET_DEFINED(upte1);
+		upte2 = CLEAR_PAGED(upte2);
+		accessPage(SWAPPAGE(upte2), FRAME(upte1), PAGE_READ);
 	} else {								// get frame for data
-		printf("\nGet a new frame for data");
+		if (DEBUG_LEVEL) printf("\nGet a new frame for data");
 		uptFrame = getFrame(FRAME(rpte1));
 		upte1 |= FRAME(uptFrame);
 		upte1 = SET_DEFINED(upte1);
@@ -280,13 +299,13 @@ int accessPage(int pnum, int frame, int rwnFlg)
 			pnum = nextPage++;
 
 		case PAGE_OLD_WRITE:                   // write
-			//printf("\n    (%d) Write frame %d (memory[%04x]) to page %d", p.PID, frame, frame<<6, pnum);
+			if (DEBUG_LEVEL) printf("\n    (%d) Write frame %d (memory[%04x]) to page %d", curTask, frame, frame<<6, pnum);
 			memcpy(&swapMemory[pnum<<6], &memory[frame<<6], 1<<7);
 			pageWrites++;
 			return pnum;
 
 		case PAGE_READ:                    	// read
-			//printf("\n    (%d) Read page %d into frame %d (memory[%04x])", p.PID, pnum, frame, frame<<6);
+			if (DEBUG_LEVEL) printf("\n    (%d) Read page %d into frame %d (memory[%04x])", curTask, pnum, frame, frame<<6);
 			memcpy(&memory[frame<<6], &swapMemory[pnum<<6], 1<<7);
 			pageReads++;
 			return pnum;
