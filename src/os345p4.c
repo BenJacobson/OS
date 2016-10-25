@@ -108,25 +108,9 @@ int P4_dumpLC3Mem(int argc, char* argv[])
 	return 0;
 } // end P4_dumpLC3Mem
 
-
-
-// **************************************************************************
-// **************************************************************************
-// vma <a>
-int P4_vmaccess(int argc, char* argv[])
-{
-	unsigned short int vadr, *padr, rpt, upt;
-
-	printf("\nValidate arguments...");
-	if (argc < 2) {
-		printf("\nPass a virtual address as the first argument");
-		return 1;
-	}
-
-	vadr = INTEGER(argv[1]);
-	padr = getMemAdr(vadr, 1);
-
-	printf("\n%04x = %04lx", vadr, padr-&MEMWORD(0));
+void printVMTables(unsigned short int va, unsigned short int pa) {
+	int rpt, upt;
+	printf("\n%04x = %04x", va, pa);
 	for (rpt = 0; rpt < 64; rpt+=2)
 	{
 		if (MEMWORD(rpt+TASK_RPT) || MEMWORD(rpt+TASK_RPT+1))
@@ -143,12 +127,32 @@ int P4_vmaccess(int argc, char* argv[])
 			}
 		}
 	}
-	printf("\nPages = %d", accessPage(0, 0, PAGE_GET_SIZE));
+	printf("\nPages = %d", accessPage(0, 0, PAGE_GET_SIZE));	
+}
+
+// **************************************************************************
+// **************************************************************************
+// vma <a>
+int P4_vmaccess(int argc, char* argv[])
+{
+	unsigned short int va, pa, *ma;
+
+	printf("\nValidate arguments...");
+	if (argc < 2) {
+		printf("\nPass a virtual address as the first argument");
+		return 1;
+	}
+
+	va = INTEGER(argv[1]);
+	ma = getMemAdr(va, 1);
+	pa = ma-&MEMWORD(0);
+
+	printVMTables(va, pa);
 
 	if (argc < 3) {
-		printf("\nValue %d", *padr);
+		printf("\nValue %d", *ma);
 	} else {
-		*padr = INTEGER(argv[2]);
+		*ma = INTEGER(argv[2]);
 	}
 
 	return 0;

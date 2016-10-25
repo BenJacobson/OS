@@ -28,7 +28,9 @@
 #include "os345.h"
 #include "os345lc3.h"
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
+
+extern void printVMTables(unsigned short int va, unsigned short int pa);
 
 // ***********************************************************************
 // mmu variables
@@ -48,7 +50,7 @@ extern int curTask;					// current task #
 
 //////////////////////////////////
 // Find the next page to swap out
-int runClock() {
+int runClock(int notMeFrame) {
 	static bool usingRPTPointer = TRUE;
 	static unsigned short clockRPTPointer = LC3_RPT;
 	static unsigned short clockUPTPointer;
@@ -71,15 +73,17 @@ int runClock() {
 					clockUPTPointer = FRAMEADDR(rpte1);
 					continue;
 				}
+			} else {
+				if (DEBUG_LEVEL > 2) printf("\nChecking RPT %x ... UNDEFINED", clockRPTPointer);
 			}
 		} else {
 			if (DEFINED(upte1)) {
 				memory[clockRPTPointer] = rpte1 = SET_PINNED(rpte1);
 				if (REFERENCED(upte1)) {
-					if (DEBUG_LEVEL) printf("\nChecking UPT %x ... %d REFERENCED", clockUPTPointer, FRAME(upte1));
+					if (DEBUG_LEVEL) printf("\n  Checking UPT %x ... %d REFERENCED", clockUPTPointer, FRAME(upte1));
 					memory[clockUPTPointer] = upte1 = CLEAR_REF(upte1);
 				} else {
-					if (DEBUG_LEVEL) printf("\nChecking UPT %x ... %d UNREFERENCED", clockUPTPointer, FRAME(upte1));
+					if (DEBUG_LEVEL) printf("\n  Checking UPT %x ... %d UNREFERENCED", clockUPTPointer, FRAME(upte1));
 					frame = FRAME(upte1);
 					upte2 = memory[clockUPTPointer + 1];
 					if (PAGED(upte2)) {
@@ -88,9 +92,11 @@ int runClock() {
 						swapEntry = accessPage(-1, frame, PAGE_NEW_WRITE);
 						memory[clockUPTPointer + 1] = SET_PAGED(swapEntry);
 					}
-					memory[clockUPTPointer] = CLEAR_DEFINED(memory[clockUPTPointer]);
+					memory[clockUPTPointer] = upte1 = CLEAR_DEFINED(upte1);
 					done = TRUE;
 				}
+			} else {
+				if (DEBUG_LEVEL > 2) printf("\n  Checking UPT %x ... UNDEFINED", clockUPTPointer);
 			}
 		}
 		// move clock pointer
@@ -122,7 +128,7 @@ int runClock() {
 	return frame;																		// return the frame number found above
 }
 
-int getFrame(int notme) {
+int getFrame(int notMeFrame) {
 	int frame, i;
 	// look for unused frames
 	frame = getAvailableFrame();
@@ -131,8 +137,9 @@ int getFrame(int notme) {
 		return frame;
 	}
 	// find a frame to swap out
-	return runClock();
+	return runClock(notMeFrame);
 }
+
 // **************************************************************************
 // **************************************************************************
 // LC3 Memory Management Unit
@@ -151,12 +158,12 @@ int getFrame(int notme) {
 // F D R P - - f f|f f f f f f f f|S - - - p p p p|p p p p p p p p
 
 unsigned short int *getMemAdr(int va, int rwFlg) {
-	unsigned short int pa;
+	unsigned short int pa, i, *frameEntryPointer;
 	int rpta, rpte1, rpte2;
 	int upta, upte1, upte2;
 	int rptFrame, uptFrame;
 
-	if (DEBUG_LEVEL > 1) printf("\nAccess to %x", va);
+	if (DEBUG_LEVEL > 2) printf("\nAccess to %x", va);
 
 	// turn off virtual addressing for system RAM
 	if (va < 0x3000) return &memory[va];
@@ -169,13 +176,18 @@ unsigned short int *getMemAdr(int va, int rwFlg) {
 	} else if (PAGED(rpte2)) {				// rpte in swap space
 		if (DEBUG_LEVEL) printf("\nBring the upt frame back from swap space");
 		rptFrame = getFrame(-1);
-		rpte1 |= FRAME(rptFrame);
+		rpte1 = FRAME(rptFrame);
 		rpte1 = SET_DEFINED(rpte1);
+		rpte1 = SET_REF(rpte1);
+		rpte1 = SET_PINNED(rpte1);
 		rpte2 = CLEAR_PAGED(rpte2);
 		accessPage(SWAPPAGE(rpte2), FRAME(rpte1), PAGE_READ);
 	} else {								// get frame for upt
 		if (DEBUG_LEVEL) printf("\nGet a new frame for UPT");
 		rptFrame = getFrame(-1);
+		frameEntryPointer = &memory[FRAMEADDR(rptFrame)];
+		for (i=0; i<LC3_FRAME_SIZE; i++)
+			*frameEntryPointer++ = 0;
 		rpte1 |= FRAME(rptFrame);
 		rpte1 = SET_DEFINED(rpte1);
 	}
@@ -189,9 +201,12 @@ unsigned short int *getMemAdr(int va, int rwFlg) {
 	} else if (PAGED(upte2)) {				// upte in swap space
 		if (DEBUG_LEVEL) printf("\nBring the data frame back from swap space");
 		uptFrame = getFrame(FRAME(rpte1));
-		upte1 |= FRAME(uptFrame);
+		if (DEBUG_LEVEL) printf("\nWe got frame number %d", uptFrame);
+		upte1 = FRAME(uptFrame);
 		upte1 = SET_DEFINED(upte1);
+		upte1 = SET_REF(upte1);
 		upte2 = CLEAR_PAGED(upte2);
+		if (DEBUG_LEVEL) printf("\nPassing in frame %d", FRAME(upte1));
 		accessPage(SWAPPAGE(upte2), FRAME(upte1), PAGE_READ);
 	} else {								// get frame for data
 		if (DEBUG_LEVEL) printf("\nGet a new frame for data");
@@ -201,6 +216,7 @@ unsigned short int *getMemAdr(int va, int rwFlg) {
 	}
 	memory[upta] = SET_REF(upte1); 			// set upt frame access bit
 	int physical_address = (FRAME(upte1)<<6) + FRAMEOFFSET(va);
+	if (DEBUG_LEVEL > 1) printVMTables(va, physical_address);
 	return &memory[physical_address];
 } // end getMemAdr
 
