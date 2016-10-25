@@ -1,2 +1,1 @@
-get frame, not me
-bring in a swapped page
+dirty bit
