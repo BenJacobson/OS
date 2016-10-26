@@ -40,6 +40,8 @@ extern int memPageFaults;
 extern int pageReads;
 extern int pageWrites;
 
+extern bool usingRPTPointer;
+
 extern unsigned short int memory[];
 extern int getMemoryData(int);
 
@@ -190,6 +192,7 @@ int P4_initMemory(int argc, char* argv[])
 
 	tcb[curTask].RPT = 0x2400;
 
+	usingRPTPointer = TRUE;
 
 	printf("\nValidate arguments...");	// ?? validate arguments
 	if (!tcb[curTask].RPT)

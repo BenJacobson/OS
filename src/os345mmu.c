@@ -37,6 +37,7 @@ extern void printVMTables(unsigned short int va, unsigned short int pa);
 
 // LC-3 memory
 unsigned short int memory[LC3_MAX_MEMORY];
+bool usingRPTPointer = TRUE;
 
 // statistics
 int memAccess;						// memory accesses
@@ -51,7 +52,6 @@ extern int curTask;					// current task #
 //////////////////////////////////
 // Find the next page to swap out
 int runClock(int notMeFrame) {
-	static bool usingRPTPointer = TRUE;
 	static unsigned short clockRPTPointer = LC3_RPT;
 	static unsigned short clockUPTPointer;
 	bool done = FALSE;
