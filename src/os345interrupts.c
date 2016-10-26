@@ -82,7 +82,7 @@ void pollInterrupts(void)
 {
 	// check for task monopoly
 	pollClock = clock();
-	assert("Timeout" && ((pollClock - lastPollClock) < MAX_CYCLES));
+	// assert("Timeout" && ((pollClock - lastPollClock) < MAX_CYCLES));
 	lastPollClock = pollClock;
 
 	// check for keyboard interrupt

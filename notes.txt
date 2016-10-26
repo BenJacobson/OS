@@ -1,1 +1,5 @@
-dirty bit
+Two bugs
+
+    1. When the clock comes out of a UPT, it checks if it can swap out that upt, but if a task ends with the clock pointing in its' upt and then that upt is cleared with 'im' it no longer belongs to a valid rpt. It sees that there are no more valid entries in the upt as it leaves and tries to swap it ot but the rpte is no longer defined
+
+    2. memset the new upt to zero, I thought I was but I has a typo.

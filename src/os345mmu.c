@@ -107,7 +107,7 @@ int runClock(int notMeFrame) {
 			clockUPTPointer += 2;														// go to next page table entry
 			if (clockUPTPointer%LC3_FRAME_SIZE==0) {									// if you finished the frame
 				usingRPTPointer = TRUE;													// go back out to the root page table
-				if (!done && !PINNED(rpte1)) {											// if the user page table you just left has no allocated pages, swap it out
+				if (!done && !PINNED(rpte1) && DEFINED(rpte1)) {						// if the user page table you just left has no allocated pages, swap it out
 					frame = FRAME(rpte1);												// set the frame address of the user page table we left
 					if (frame != notMeFrame) {
 						rpte2 = memory[clockRPTPointer + 1];
@@ -130,6 +130,18 @@ int runClock(int notMeFrame) {
 		}
 	}
 	if (DEBUG_LEVEL) printf("\nSwapping out %d", frame);
+	// printf("\nFrame %d", frame);
+	// printVMTables(0, 0);
+	// fflush(stdout);
+	if (frame < 192 || frame > 207) {
+		int x = 0;
+	}
+	for (unsigned short int test = LC3_RPT; test < LC3_RPT_END; test += 2) {
+		unsigned short int data = memory[test];
+		if (frame == FRAME(data) && DEFINED(data)) {
+			int x = 0;
+		}
+	}
 	return frame;																		// return the frame number found above
 }
 
@@ -197,9 +209,11 @@ unsigned short int *getMemAdr(int va, int rwFlg) {
 		if (DEBUG_LEVEL) printf("\nGet a new frame for UPT");
 		memPageFaults++;
 		rptFrame = getFrame(-1);
-		frameEntryPointer = &memory[FRAMEADDR(rptFrame)];
-		for (i=0; i<LC3_FRAME_SIZE; i++)
-			*frameEntryPointer++ = 0;
+		int rptFrameAddr = FRAMEADDR(rptFrame);
+		memset(&memory[rptFrameAddr], 0, sizeof(memory[0]) * LC3_FRAME_SIZE);
+		// frameEntryPointer = &memory[FRAMEADDR(rptFrame)];
+		// for (i=0; i<LC3_FRAME_SIZE; i++)
+		// 	*frameEntryPointer++ = 0;
 		rpte1 |= FRAME(rptFrame);
 		rpte1 = SET_DEFINED(rpte1);
 	}

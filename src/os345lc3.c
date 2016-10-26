@@ -26,6 +26,8 @@
 #include "os345lc3.h"
 #include "os345fat.h"
 
+extern void printVMTables(unsigned short int va, unsigned short int pa);
+
 // ***********************************************************************
 // lc3 variables
 extern unsigned short int memory[];	// lc3 memory
@@ -114,6 +116,7 @@ int lc3Task(int argc, char* argv[])
 			case LC3_BR:                  // BR instruction
 				if (ir == 0)
 				{  printf("\n**(%d) Illegal instruction 0x%04x at 0x%04x (frame %d)", LC3_TID, ir, LC3_PC, LC3_PC>>6);
+				    printVMTables(0, 0);
 					return -1;                 // abort!
 				}
 				if ((LC3_CC&0x04 && GET_N) || (LC3_CC&0x02 && GET_Z) || (LC3_CC&0x01 && GET_P))
@@ -385,6 +388,7 @@ int lc3Task(int argc, char* argv[])
 
 			default:
 				printf(UNDEFINED_OPCODE_MSG, GET_OPCODE);
+				printVMTables(0, 0);
 		      return -1;                 // abort!
 		}
 		if (LC3_DEBUG&0x02)              // debug mode
