@@ -400,6 +400,7 @@ int decDC(int argc, char* argv[]) {
 		}
 		SEM_SIGNAL(deltaClockMutex);										SWAP;
 	}
+	return 0;
 } // end decDC
 
 
@@ -432,7 +433,7 @@ static int initOS()
 	srand(time(NULL));					// seed random function
 
 	// malloc ready queue
-	readyQueue = newPQueue(MAX_TASKS);
+	readyQueue = newPQueue();
 	if (readyQueue == NULL) return 99;
 
 	// capture current time

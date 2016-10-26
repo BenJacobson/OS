@@ -15,6 +15,6 @@ typedef int* PQueue;					// Priority Queue
 int enqueueTask(PQueue pqueue, TID taskID);
 TID dequeueTask(PQueue pqueue);
 void removeTask(PQueue pqueue, TID taskID);
-PQueue newPQueue();
+PQueue newPQueue(void);
 
 #endif//__os345pqueue_h__

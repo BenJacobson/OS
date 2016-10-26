@@ -199,7 +199,7 @@ extern Semaphore* createSemaphore(char* name, int type, int state) {
 	sem->type = type;									// 0=binary, 1=counting
 	sem->state = state;									// initial semaphore state
 	sem->taskNum = curTask;								// set parent task #
-	sem->blockedQueue = newPQueue(MAX_TASKS);			// allocate space for blocked queue
+	sem->blockedQueue = newPQueue();			// allocate space for blocked queue
 
 	// prepend to semaphore list
 	sem->semLink = (struct semaphore*)semaphoreList;

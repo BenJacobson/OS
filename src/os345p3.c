@@ -205,7 +205,7 @@ int carTask(int argc, char* argv[]) {
 // ***********************************************************************
 // ***********************************************************************
 // Get the number of the car about to embark
-int getLeavingCar() {
+int getLeavingCar(void) {
 	for (int i=0; i<NUM_CARS; i++) {
 		if (myPark.cars[i].location == 33) {
 			return i+3;
