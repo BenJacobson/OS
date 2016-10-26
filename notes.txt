@@ -3,3 +3,15 @@ Two bugs
     1. When the clock comes out of a UPT, it checks if it can swap out that upt, but if a task ends with the clock pointing in its' upt and then that upt is cleared with 'im' it no longer belongs to a valid rpt. It sees that there are no more valid entries in the upt as it leaves and tries to swap it ot but the rpte is no longer defined
 
     2. memset the new upt to zero, I thought I was but I has a typo.
+
+Normal Clock Algorithm Statistics
+
+                Crawler                         Memtest
+Frames          320     16      8       2       320      16       8        2
+
+Accesses        1071855 1071855 1071855 1071855 29012445 29012445 29012445 29012445
+Hits            1070558 1070109 1068602 832965  29000104 28976455 28851922 24416659
+Faults          483     932     2439    238076  12163    35812    160345   4595608
+Page Reads      28      477     1984    237621  11427    35076    159609   4594872
+Page Writes     163     916     2431    238074  11843    35796    160337   4595606
+Swap Pages      163     444     453     455     721      729      735      736
