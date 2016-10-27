@@ -89,7 +89,10 @@ int runClock(int notMeFrame) {
 					if (frame != notMeFrame) {
 						upte2 = memory[clockUPTPointer + 1];
 						if (PAGED(upte2)) {
-							accessPage(SWAPPAGE(upte2), frame, PAGE_OLD_WRITE);
+							if (DIRTY(upte1)) {
+								accessPage(SWAPPAGE(upte2), frame, PAGE_OLD_WRITE);
+								memory[clockUPTPointer] = upte1 = CLEAR_DIRTY(upte1);
+							}
 						} else {
 							swapEntry = accessPage(-1, frame, PAGE_NEW_WRITE);
 							memory[clockUPTPointer + 1] = SET_PAGED(swapEntry);
@@ -112,7 +115,10 @@ int runClock(int notMeFrame) {
 					if (frame != notMeFrame) {
 						rpte2 = memory[clockRPTPointer + 1];
 						if (PAGED(rpte2)) {
-							accessPage(SWAPPAGE(rpte2), frame, PAGE_OLD_WRITE);
+							if (DIRTY(rpte1)) {
+								accessPage(SWAPPAGE(rpte2), frame, PAGE_OLD_WRITE);
+								memory[clockRPTPointer] = rpte1 = CLEAR_DIRTY(rpte1);
+							}
 						} else {
 							swapEntry = accessPage(-1, frame, PAGE_NEW_WRITE);
 							memory[clockRPTPointer + 1] = SET_PAGED(swapEntry);
@@ -203,7 +209,6 @@ unsigned short int *getMemAdr(int va, int rwFlg) {
 		rpte1 = SET_DEFINED(rpte1);
 		rpte1 = SET_REF(rpte1);
 		rpte1 = SET_PINNED(rpte1);
-		rpte2 = CLEAR_PAGED(rpte2);
 		accessPage(SWAPPAGE(rpte2), FRAME(rpte1), PAGE_READ);
 	} else {								// get frame for upt
 		if (DEBUG_LEVEL) printf("\nGet a new frame for UPT");
@@ -215,7 +220,7 @@ unsigned short int *getMemAdr(int va, int rwFlg) {
 		// for (i=0; i<LC3_FRAME_SIZE; i++)
 		// 	*frameEntryPointer++ = 0;
 		rpte1 |= FRAME(rptFrame);
-		rpte1 = SET_DEFINED(rpte1);
+		rpte1 = SET_DEFINED(rpte1);	
 	}
 	memory[rpta] = SET_REF(rpte1);			// set rpt frame access bit
 
@@ -231,14 +236,18 @@ unsigned short int *getMemAdr(int va, int rwFlg) {
 		upte1 = FRAME(uptFrame);
 		upte1 = SET_DEFINED(upte1);
 		upte1 = SET_REF(upte1);
-		upte2 = CLEAR_PAGED(upte2);
 		accessPage(SWAPPAGE(upte2), FRAME(upte1), PAGE_READ);
+		memory[rpta] = SET_DIRTY(memory[rpta]);
 	} else {								// get frame for data
 		if (DEBUG_LEVEL) printf("\nGet a new frame for data");
 		memPageFaults++;
 		uptFrame = getFrame(FRAME(rpte1));
 		upte1 |= FRAME(uptFrame);
 		upte1 = SET_DEFINED(upte1);
+		memory[rpta] = SET_DIRTY(memory[rpta]);		
+	}
+	if (rwFlg) {
+		upte1 = SET_DIRTY(upte1);
 	}
 	memory[upta] = SET_REF(upte1); 			// set upt frame access bit
 	int physical_address = (FRAME(upte1)<<6) + FRAMEOFFSET(va);
