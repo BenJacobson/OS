@@ -28,6 +28,7 @@
 
 #define LC3_MAX_PAGE        (LC3_FRAMES<<3)
 #define LC3_MAX_SWAP_MEMORY (LC3_MAX_PAGE<<6)
+#define LC3_SBT_SIZE        ((LC3_MAX_PAGE)>>4)
 
 #define INSTRUCTIONS_PER_SWAP	10
 
@@ -221,7 +222,7 @@ void initLC3Memory(int startFrame, int endFrame);
 
 unsigned short int *getMemAdr(int va, int rwFlg);
 int accessPage(int pnum, int frame, int rwnFlg);
-void setFrameTableBits(int flg, int sf, int ef);
+void setFrameTableBits(unsigned short int* table, int startIndex, int numBits, int flg, int startBit, int endBit);
 int getAvailableFrame();
 void outPTE(char* s, int pte);
 

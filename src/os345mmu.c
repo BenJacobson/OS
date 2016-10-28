@@ -45,7 +45,7 @@ int memHits;						// memory hits
 int memPageFaults;					// memory faults
 
 int getFrame(int);
-int getAvailableFrame(void);
+int getAvailableFrame(unsigned short int*, int, int);
 extern TCB tcb[];					// task control block
 extern int curTask;					// current task #
 
@@ -136,26 +136,14 @@ int runClock(int notMeFrame) {
 		}
 	}
 	if (DEBUG_LEVEL) printf("\nSwapping out %d", frame);
-	// printf("\nFrame %d", frame);
-	// printVMTables(0, 0);
-	// fflush(stdout);
-	if (frame < 192 || frame > 207) {
-		int x = 0;
-	}
-	for (unsigned short int test = LC3_RPT; test < LC3_RPT_END; test += 2) {
-		unsigned short int data = memory[test];
-		if (frame == FRAME(data) && DEFINED(data)) {
-			int x = 0;
-		}
-	}
 	return frame;																		// return the frame number found above
 }
 
 int getFrame(int notMeFrame) {
 	int frame, i;
 	// look for unused frames
-	frame = getAvailableFrame();
-	if (frame >=0) {
+	frame = getAvailableFrame(memory, LC3_FBT, LC3_FRAMES);
+	if (frame >= 0) {
 		if (DEBUG_LEVEL) printf("\nFound free frame %d", frame);
 		return frame;
 	}
@@ -258,56 +246,52 @@ unsigned short int *getMemAdr(int va, int rwFlg) {
 
 // **************************************************************************
 // **************************************************************************
-// set frames available from sf to ef
+// set frames available from start to end
 //    flg = 0 -> clear all others
 //        = 1 -> just add bits
 //
-void setFrameTableBits(int flg, int sf, int ef)
+void setFrameTableBits(unsigned short int* table, int startIndex, int numBits, int flg, int startBit, int endBit)
 {	int i, data;
-	int adr = LC3_FBT-1;             // index to frame bit table
-	int fmask = 0x0001;              // bit mask
+	int adr = startIndex-1;             // index to frame bit table
+	int fmask = 0x0001;          	    // bit mask
 
 	// 1024 frames in LC-3 memory
-	for (i=0; i<LC3_FRAMES; i++)
+	for (i=0; i<numBits; i++)
 	{	if (fmask & 0x0001)
 		{  fmask = 0x8000;
 			adr++;
-			data = (flg)?MEMWORD(adr):0;
+			data = (flg)?table[adr]:0;
 		}
 		else fmask = fmask >> 1;
 		// allocate frame if in range
-		if ( (i >= sf) && (i < ef)) data = data | fmask;
-		MEMWORD(adr) = data;
+		if ( (i >= startBit) && (i < endBit)) data = data | fmask;
+		table[adr] = data;
 	}
 	return;
 } // end setFrameTableBits
 
-
 // **************************************************************************
-// get frame from frame bit table (else return -1)
-int getAvailableFrame()
-{
+// get free bit from table (else return -1)
+int getAvailableFrame(unsigned short int* table, int startIndex, int numBits) {
 	int i, data;
-	int adr = LC3_FBT - 1;				// index to frame bit table
+	int adr = startIndex - 1;				// index to frame bit table
 	int fmask = 0x0001;					// bit mask
 
-	for (i=0; i<LC3_FRAMES; i++)		// look thru all frames
+	for (i=0; i<numBits; i++)		// look thru all frames
 	{	if (fmask & 0x0001)
 		{  fmask = 0x8000;				// move to next work
 			adr++;
-			data = MEMWORD(adr);
+			data = table[adr];
 		}
 		else fmask = fmask >> 1;		// next frame
 		// deallocate frame and return frame #
 		if (data & fmask)
-		{  MEMWORD(adr) = data & ~fmask;
+		{  table[adr] = data & ~fmask;
 			return i;
 		}
 	}
 	return -1;
-} // end getAvailableFrame
-
-
+} // end getAvailableSwapIndex
 
 // **************************************************************************
 // read/write to swap space
@@ -317,6 +301,7 @@ int accessPage(int pnum, int frame, int rwnFlg)
 	static int pageReads;						// page reads
 	static int pageWrites;						// page writes
 	static unsigned short int swapMemory[LC3_MAX_SWAP_MEMORY];
+	static unsigned short int swapBitTable[LC3_SBT_SIZE];
 
 	if ((nextPage >= LC3_MAX_PAGE) || (pnum >= LC3_MAX_PAGE))
 	{
@@ -332,6 +317,7 @@ int accessPage(int pnum, int frame, int rwnFlg)
 			nextPage = 0;						// disk swap space size
 			pageReads = 0;						// disk page reads
 			pageWrites = 0;						// disk page writes
+			memset(swapBitTable, 0, sizeof(*swapBitTable) * LC3_SBT_SIZE); // no available swap pages
 			return 0;
 
 		case PAGE_GET_SIZE:                    	// return swap size
@@ -347,7 +333,9 @@ int accessPage(int pnum, int frame, int rwnFlg)
 			return (int)(long)(&swapMemory[pnum<<6]);
 
 		case PAGE_NEW_WRITE:                   // new write (Drops thru to write old)
-			pnum = nextPage++;
+			pnum = getAvailableFrame(swapBitTable, 0, LC3_MAX_PAGE);
+			if (pnum < 0)
+				pnum = nextPage++;
 
 		case PAGE_OLD_WRITE:                   // write
 			if (DEBUG_LEVEL) printf("\n    (%d) Write frame %d (memory[%04x]) to page %d", curTask, frame, frame<<6, pnum);

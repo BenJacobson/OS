@@ -46,7 +46,6 @@ int getMemoryData(int address);
 int getCharacter(void);
 
 extern unsigned short int *getMemAdr(int va, int rwFlg);
-extern void setFrameTableBits(int flg, int sf, int ef);
 
 // ***********************************************************************
 // ***********************************************************************
@@ -425,7 +424,7 @@ void initLC3Memory(int startFrame, int endFrame)
    // write trap vectors
 	for (i=0; i<256; i++) memory[i] = i;
    // initialize frame table
-   setFrameTableBits(0, startFrame, endFrame);
+   setFrameTableBits(memory, LC3_FBT, LC3_FRAMES, 0, startFrame, endFrame);
    // initialize paged memory
    accessPage(0, 0, PAGE_INIT);
 	return;
