@@ -49,7 +49,8 @@
 // definitions within a root or user table page
 #define DEFINED(e1)       ((e1)&BIT_15_MASK)
 #define DIRTY(e1)         ((e1)&BIT_14_MASK)
-#define REFERENCED(e1)    ((e1)&BIT_13_MASK)
+// #define REFERENCED(e1)    ((e1)&BIT_13_MASK)
+#define REFERENCED(e1)    ((e1)&(BIT_11_MASK|BIT_10_MASK))
 #define PINNED(e1)        ((e1)&BIT_12_MASK)
 #define FRAME(e1)         ((e1)&BITS_9_0_MASK)
 #define FRAMEADDR(e1)     (FRAME((e1))<<6)
@@ -62,13 +63,16 @@
 
 #define SET_DEFINED(e1)   ((e1)|BIT_15_MASK)
 #define SET_DIRTY(e1)     ((e1)|BIT_14_MASK)
-#define SET_REF(e1)       ((e1)|BIT_13_MASK)
+// #define SET_REF(e1)       ((e1)|BIT_13_MASK)
+#define SET_REF(e1)       ((e1)|(BIT_11_MASK|BIT_10_MASK))
 #define SET_PINNED(e1)    ((e1)|BIT_12_MASK)
 #define SET_PAGED(e2)     ((e2)|BIT_15_MASK)
 
 #define CLEAR_DEFINED(e1) ((e1)&~BIT_15_MASK)
 #define CLEAR_DIRTY(e1)   ((e1)&~BIT_14_MASK)
-#define CLEAR_REF(e1)     ((e1)&~BIT_13_MASK)
+// #define CLEAR_REF(e1)     ((e1)&~BIT_13_MASK)
+#define DELETE_REF(e1)    ((e1)&~(BIT_11_MASK|BIT_10_MASK))
+#define CLEAR_REF(e1)     (REFERENCED(e1)?(DELETE_REF(e1)|(((REFERENCED(e1)>>10)-1)<<10)):0)
 #define CLEAR_PINNED(e1)  ((e1)&~BIT_12_MASK)
 #define CLEAR_PAGED(e2)   ((e2)&~BIT_15_MASK)
 
