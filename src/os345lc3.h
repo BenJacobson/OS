@@ -20,6 +20,7 @@
 // max frames in LC3 (2^16 - 2^6 = 2^10)
 #define LC3_FRAMES     1024
 
+#define LC3_SBT     0x1E00
 #define LC3_FBT     0x2000
 #define LC3_RPT     0x2400
 #define LC3_RPT_END 0x3000
@@ -54,6 +55,7 @@
 #define FRAMEADDR(e1)     (FRAME((e1))<<6)
 #define PAGED(e2)         ((e2)&BIT_15_MASK)
 #define SWAPPAGE(e2)      ((e2)&BITS_12_0_MASK)
+#define PAGEADDR(e2)      (SWAPPAGE((e2))<<6)
 
 #define MEMWORD(a)        (memory[a])
 #define MEMLWORD(a)       ((memory[a]<<16)+memory[(a)+1])
@@ -222,8 +224,9 @@ void initLC3Memory(int startFrame, int endFrame);
 
 unsigned short int *getMemAdr(int va, int rwFlg);
 int accessPage(int pnum, int frame, int rwnFlg);
-void setFrameTableBits(unsigned short int* table, int startIndex, int numBits, int flg, int startBit, int endBit);
-int getAvailableFrame();
+void setTableBit(unsigned short int* table, unsigned short int bit);
+int getAvailableFrame(unsigned short int* table, int numBits);
+void freeTaskMemory(int rpt);
 void outPTE(char* s, int pte);
 
 #endif // __os345lc3_h__

@@ -40,8 +40,6 @@ extern int memPageFaults;
 extern int pageReads;
 extern int pageWrites;
 
-extern bool usingRPTPointer;
-
 extern unsigned short int memory[];
 extern int getMemoryData(int);
 
@@ -192,8 +190,6 @@ int P4_initMemory(int argc, char* argv[])
 
 	tcb[curTask].RPT = 0x2400;
 
-	usingRPTPointer = TRUE;
-
 	printf("\nValidate arguments...");	// ?? validate arguments
 	if (!tcb[curTask].RPT)
 	{
@@ -269,6 +265,7 @@ int P4_virtualMemStats(int argc, char* argv[])
 int P4_dumpFrameTable(int argc, char* argv[])
 {
 	dumpMemory("Frame Bit Table", LC3_FBT, LC3_FBT+0x40);
+	dumpMemory("Swap Bit Table", LC3_SBT, LC3_SBT+LC3_SBT_SIZE);
 	return 0;
 } // end P4_dumpFrameTable
 

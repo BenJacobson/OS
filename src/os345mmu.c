@@ -37,6 +37,9 @@ extern void printVMTables(unsigned short int va, unsigned short int pa);
 
 // LC-3 memory
 unsigned short int memory[LC3_MAX_MEMORY];
+unsigned short int swapMemory[LC3_MAX_SWAP_MEMORY];
+
+// Clock status
 bool usingRPTPointer = TRUE;
 
 // statistics
@@ -45,7 +48,7 @@ int memHits;						// memory hits
 int memPageFaults;					// memory faults
 
 int getFrame(int);
-int getAvailableFrame(unsigned short int*, int, int);
+int getAvailableFrame(unsigned short int*, int);
 extern TCB tcb[];					// task control block
 extern int curTask;					// current task #
 
@@ -142,7 +145,7 @@ int runClock(int notMeFrame) {
 int getFrame(int notMeFrame) {
 	int frame, i;
 	// look for unused frames
-	frame = getAvailableFrame(memory, LC3_FBT, LC3_FRAMES);
+	frame = getAvailableFrame(&memory[LC3_FBT], LC3_FRAMES);
 	if (frame >= 0) {
 		if (DEBUG_LEVEL) printf("\nFound free frame %d", frame);
 		return frame;
@@ -204,9 +207,6 @@ unsigned short int *getMemAdr(int va, int rwFlg) {
 		rptFrame = getFrame(-1);
 		int rptFrameAddr = FRAMEADDR(rptFrame);
 		memset(&memory[rptFrameAddr], 0, sizeof(memory[0]) * LC3_FRAME_SIZE);
-		// frameEntryPointer = &memory[FRAMEADDR(rptFrame)];
-		// for (i=0; i<LC3_FRAME_SIZE; i++)
-		// 	*frameEntryPointer++ = 0;
 		rpte1 |= FRAME(rptFrame);
 		rpte1 = SET_DEFINED(rpte1);	
 	}
@@ -243,55 +243,76 @@ unsigned short int *getMemAdr(int va, int rwFlg) {
 	return &memory[physical_address];
 } // end getMemAdr
 
-
 // **************************************************************************
-// **************************************************************************
-// set frames available from start to end
-//    flg = 0 -> clear all others
-//        = 1 -> just add bits
-//
-void setFrameTableBits(unsigned short int* table, int startIndex, int numBits, int flg, int startBit, int endBit)
-{	int i, data;
-	int adr = startIndex-1;             // index to frame bit table
-	int fmask = 0x0001;          	    // bit mask
-
-	// 1024 frames in LC-3 memory
-	for (i=0; i<numBits; i++)
-	{	if (fmask & 0x0001)
-		{  fmask = 0x8000;
-			adr++;
-			data = (flg)?table[adr]:0;
-		}
-		else fmask = fmask >> 1;
-		// allocate frame if in range
-		if ( (i >= startBit) && (i < endBit)) data = data | fmask;
-		table[adr] = data;
-	}
-	return;
-} // end setFrameTableBits
+// set the specified bit in the table
+void setTableBit(unsigned short int* table, unsigned short int bit) {
+	table[(bit>>4)] |= 0x8000>>(bit&0xF);
+}
 
 // **************************************************************************
 // get free bit from table (else return -1)
-int getAvailableFrame(unsigned short int* table, int startIndex, int numBits) {
+int getAvailableFrame(unsigned short int* table, int numBits) {
 	int i, data;
-	int adr = startIndex - 1;				// index to frame bit table
+	int adr = -1;						// index to frame bit table
 	int fmask = 0x0001;					// bit mask
 
-	for (i=0; i<numBits; i++)		// look thru all frames
-	{	if (fmask & 0x0001)
-		{  fmask = 0x8000;				// move to next work
+	for (i=0; i<numBits; i++) {			// look thru all frames
+		if (fmask & 0x0001) {
+			fmask = 0x8000;				// move to next work
 			adr++;
 			data = table[adr];
+		} else {
+			fmask = fmask >> 1;			// next frame
 		}
-		else fmask = fmask >> 1;		// next frame
 		// deallocate frame and return frame #
-		if (data & fmask)
-		{  table[adr] = data & ~fmask;
+		if (data & fmask) {
+			table[adr] = data & ~fmask;
 			return i;
 		}
 	}
 	return -1;
 } // end getAvailableSwapIndex
+
+void freeTaskMemory(int rpt) {
+	unsigned short int *rptAdr = &memory[rpt];
+	unsigned short int *rptEnd = rptAdr +  LC3_FRAME_SIZE;
+	while (rptAdr < rptEnd) {
+		unsigned short int rpte1 = *rptAdr;
+		unsigned short int rpte2 = *(rptAdr + 1);		
+		if (DEFINED(rpte1) || PAGED(rpte2)) {
+			unsigned short int *uptAdr;
+			if (DEFINED(rpte1))
+				uptAdr = &memory[FRAMEADDR(rpte1)];
+			else
+				uptAdr = &swapMemory[PAGEADDR((int)rpte2)];
+			unsigned short int *uptEnd = uptAdr +  LC3_FRAME_SIZE;
+			while (uptAdr < uptEnd) {
+				unsigned short int upte1 = *uptAdr;
+				unsigned short int upte2 = *(uptAdr + 1);
+				if (DEFINED(upte1)) {
+					setTableBit(&memory[LC3_FBT], FRAME(upte1));
+					memset(&memory[FRAMEADDR(upte1)], 0, sizeof(*memory) * LC3_FRAME_SIZE);
+				}
+				if (PAGED(upte2)) {
+					setTableBit(&memory[LC3_SBT], SWAPPAGE(upte2));
+					memset(&swapMemory[PAGEADDR((int)upte2)], 0, sizeof(*memory) * LC3_FRAME_SIZE);
+				}
+				uptAdr += 2;
+			}
+			if (DEFINED(rpte1)) {
+				setTableBit(&memory[LC3_FBT], FRAME(rpte1));
+				memset(&memory[FRAMEADDR(rpte1)], 0, sizeof(*memory) * LC3_FRAME_SIZE);
+			}
+			if (PAGED(rpte2)) {
+				setTableBit(&memory[LC3_SBT], SWAPPAGE(rpte2));
+				memset(&swapMemory[PAGEADDR((int)rpte2)], 0, sizeof(*memory) * LC3_FRAME_SIZE);
+			}
+		}
+		rptAdr += 2;
+	}
+	memset(&memory[rpt], 0, sizeof(*memory) * LC3_FRAME_SIZE);
+	usingRPTPointer = TRUE;
+}
 
 // **************************************************************************
 // read/write to swap space
@@ -300,8 +321,6 @@ int accessPage(int pnum, int frame, int rwnFlg)
 	static int nextPage;						// swap page size
 	static int pageReads;						// page reads
 	static int pageWrites;						// page writes
-	static unsigned short int swapMemory[LC3_MAX_SWAP_MEMORY];
-	static unsigned short int swapBitTable[LC3_SBT_SIZE];
 
 	if ((nextPage >= LC3_MAX_PAGE) || (pnum >= LC3_MAX_PAGE))
 	{
@@ -317,7 +336,7 @@ int accessPage(int pnum, int frame, int rwnFlg)
 			nextPage = 0;						// disk swap space size
 			pageReads = 0;						// disk page reads
 			pageWrites = 0;						// disk page writes
-			memset(swapBitTable, 0, sizeof(*swapBitTable) * LC3_SBT_SIZE); // no available swap pages
+			memset(&memory[LC3_SBT], 0, sizeof(*memory) * LC3_SBT_SIZE); // no available swap pages
 			return 0;
 
 		case PAGE_GET_SIZE:                    	// return swap size
@@ -333,7 +352,7 @@ int accessPage(int pnum, int frame, int rwnFlg)
 			return (int)(long)(&swapMemory[pnum<<6]);
 
 		case PAGE_NEW_WRITE:                   // new write (Drops thru to write old)
-			pnum = getAvailableFrame(swapBitTable, 0, LC3_MAX_PAGE);
+			pnum = getAvailableFrame(&memory[LC3_SBT], LC3_MAX_PAGE);
 			if (pnum < 0)
 				pnum = nextPage++;
 

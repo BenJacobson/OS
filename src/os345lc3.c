@@ -424,7 +424,8 @@ void initLC3Memory(int startFrame, int endFrame)
    // write trap vectors
 	for (i=0; i<256; i++) memory[i] = i;
    // initialize frame table
-   setFrameTableBits(memory, LC3_FBT, LC3_FRAMES, 0, startFrame, endFrame);
+   memset(&memory[LC3_FBT], 0, LC3_FRAMES>>3);
+   for (i=startFrame; i<endFrame; i++) setTableBit(&memory[LC3_FBT], i);
    // initialize paged memory
    accessPage(0, 0, PAGE_INIT);
 	return;

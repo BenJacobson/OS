@@ -190,6 +190,8 @@ int sysKillTask(int taskID)
 		}
 	}
 
+	freeTaskMemory(tcb[taskID].RPT);
+
 	// ?? delete task from system queues
 
 	tcb[taskID].name = 0;			// release tcb slot
