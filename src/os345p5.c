@@ -140,7 +140,7 @@ int parentTask(int argc, char* argv[])		// group 1
 //	while (1) SWAP;							// keep parent alive
 	while (1)
 	{
-		++group_count[parent - 1];
+		group_count[parent-1]++;
 		SWAP;
 	}
 

@@ -36,6 +36,7 @@
 //
 void pollInterrupts(void);
 static int scheduler(void);
+static int fairShareScheduler(void);
 static int dispatcher(void);
 int decDC(int argc, char* argv[]);
 int sysKillTask(int taskID);
@@ -193,22 +194,12 @@ int main(int argc, char* argv[])
 // scheduler
 //
 static int scheduler() {
-	// ?? Design and implement a scheduler that will select the next highest
-	// ?? priority ready task to pass to the system dispatcher.
-
-	// ?? WARNING: You must NEVER call swapTask() from within this function
-	// ?? or any function that it calls.  This is because swapping is
-	// ?? handled entirely in the swapTask function, which, in turn, may
-	// ?? call this function.  (ie. You would create an infinite loop.)
-
-	// ?? Implement a round-robin, preemptive, prioritized scheduler.
-
-	// ?? This code is simply a round-robin scheduler and is just to get
-	// ?? you thinking about scheduling.  You must implement code to handle
-	// ?? priorities, clean up dead tasks, and handle semaphores appropriately.
-
 	int nextTask;
-	nextTask = dequeueTask(readyQueue);
+	if (scheduler_mode) {
+		nextTask = fairShareScheduler();
+	} else {
+		nextTask = dequeueTask(readyQueue);
+	}
 	if (nextTask == -1)
 		return -1;
 
@@ -225,6 +216,10 @@ static int scheduler() {
 	return nextTask;
 } // end scheduler
 
+
+static int fairShareScheduler() {
+	return -1;
+}
 
 // **********************************************************************
 // **********************************************************************
