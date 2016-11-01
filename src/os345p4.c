@@ -65,14 +65,14 @@ int P4_project4(int argc, char* argv[])					// project 5
 	P4_initMemory(argc, argv);
 
 	// start lc3 tasks
-	loadLC3File("src/memtest.hex");
-	loadLC3File("src/crawler.hex");
+	loadLC3File("memtest.hex");
+	loadLC3File("crawler.hex");
 
-	loadLC3File("src/memtest.hex");
-	loadLC3File("src/crawler.hex");
+	loadLC3File("memtest.hex");
+	loadLC3File("crawler.hex");
 
-	loadLC3File("src/memtest.hex");
-	loadLC3File("src/crawler.hex");
+	loadLC3File("memtest.hex");
+	loadLC3File("crawler.hex");
 
 	return 0;
 }
@@ -560,7 +560,7 @@ void loadLC3File(char* string)
 // **************************************************************************
 int P4_crawler(int argc, char* argv[])
 {
-	loadLC3File("src/crawler.hex");
+	loadLC3File("crawler.hex");
 	return 0;
 } // end P4_crawler
 
@@ -570,7 +570,7 @@ int P4_crawler(int argc, char* argv[])
 // **************************************************************************
 int P4_memtest(int argc, char* argv[])
 {
-	loadLC3File("src/memtest.hex");
+	loadLC3File("memtest.hex");
 	return 0;
 } // end crawler and memtest programs
 
