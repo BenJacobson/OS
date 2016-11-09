@@ -36,7 +36,7 @@
 //
 void pollInterrupts(void);
 static int scheduler(void);
-static int createFairShareSchedule(void);
+static int createFairShareSchedule(TID parent, int numTimeSlots);
 static int dispatcher(void);
 int decDC(int argc, char* argv[]);
 int sysKillTask(int taskID);
@@ -91,6 +91,7 @@ time_t oldTime10;						// old 10sec time
 clock_t myClkTime;
 clock_t myOldClkTime;
 PQueue readyQueue;						// ready priority queue
+PQueue fairScheduleBuffer;				// queue to hold tasks while computing fair schedule
 
 // **********************************************************************
 // **********************************************************************
@@ -172,7 +173,6 @@ int main(int argc, char* argv[])
 
 	while(1)									// scheduling loop
 	{
-		for(int i=0; i<100000; i++);
 		// check for character / timer interrupts
 		pollInterrupts();
 
@@ -198,7 +198,7 @@ static int scheduler() {
 	int nextTask = dequeueTask(readyQueue, schedulerMode);
 	if (nextTask == -1) {
 		if (schedulerMode) {
-			nextTask = createFairShareSchedule();
+			nextTask = createFairShareSchedule(SHELL_TID, NUM_TIME_SLOTS);
 		} else {
 			return -1;
 		}
@@ -218,9 +218,25 @@ static int scheduler() {
 } // end scheduler
 
 
-static int createFairShareSchedule() {
+static int createFairShareSchedule(TID parent, int numTimeSlots) {
+	if (!numTimeSlots)
+		return 0;
+	int numChildren = 0;
 	for (int i=readyQueue[0]; i>0; i--) {
-		tcb[readyQueue[i]].timeLeft = 20;
+		if (tcb[readyQueue[i]].parent == parent) {
+			numChildren++;
+		}
+	}
+	if (numChildren) {
+		int fairShare = numTimeSlots / (++numChildren);
+		for (int i=readyQueue[0]; i>0; i--) {
+			if (tcb[readyQueue[i]].parent == parent) {
+				createFairShareSchedule(readyQueue[i], fairShare);
+			}
+		}
+		tcb[parent].timeLeft = fairShare + (numTimeSlots % numChildren);
+	} else {
+		tcb[parent].timeLeft = numTimeSlots;		
 	}
 	return 0;
 }
