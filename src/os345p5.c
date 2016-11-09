@@ -89,12 +89,12 @@ int P5_project5(int argc, char* argv[])		// project 5
 		new_argv[2] = arg3;
 
 		printf("\nCreate %s with %d child%s", arg1, atoi(arg3), (atoi(arg3) == 1 ? "" : "ren"));
-		createTask(new_argv[0]				// task name
-				 , parentTask,				// parent task
-				   MED_PRIORITY,			// priority
-				   1,						// task time slice
-				   3,						// argc
-				   new_argv);				// argv
+		createTask(new_argv[0],				// task name
+				parentTask,				// parent task
+				MED_PRIORITY,			// priority
+				1,						// task time slice
+				3,						// argc
+				new_argv);				// argv
 		SEM_WAIT(parentDead);				// wait for parent to die
 	}
 

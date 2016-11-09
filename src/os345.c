@@ -198,10 +198,9 @@ static int scheduler() {
 	int nextTask = dequeueTask(readyQueue, schedulerMode);
 	if (nextTask == -1) {
 		if (schedulerMode) {
-			nextTask = createFairShareSchedule(SHELL_TID, NUM_TIME_SLOTS);
-		} else {
-			return -1;
+			createFairShareSchedule(SHELL_TID, NUM_TIME_SLOTS);
 		}
+		return nextTask;
 	}
 
 	// Pause SIGSTOP tasks
@@ -222,16 +221,16 @@ static int createFairShareSchedule(TID parent, int numTimeSlots) {
 	if (!numTimeSlots)
 		return 0;
 	int numChildren = 0;
-	for (int i=readyQueue[0]; i>0; i--) {
-		if (tcb[readyQueue[i]].parent == parent) {
+	for (int i=0; i<MAX_TASKS; i++) {
+		if (tcb[i].name && tcb[i].parent == parent) {
 			numChildren++;
 		}
 	}
 	if (numChildren) {
 		int fairShare = numTimeSlots / (++numChildren);
-		for (int i=readyQueue[0]; i>0; i--) {
-			if (tcb[readyQueue[i]].parent == parent) {
-				createFairShareSchedule(readyQueue[i], fairShare);
+		for (int i=0; i<MAX_TASKS; i++) {
+			if (tcb[i].name && tcb[i].parent == parent) {
+				createFairShareSchedule(i, fairShare);
 			}
 		}
 		tcb[parent].timeLeft = fairShare + (numTimeSlots % numChildren);
@@ -239,6 +238,15 @@ static int createFairShareSchedule(TID parent, int numTimeSlots) {
 		tcb[parent].timeLeft = numTimeSlots;		
 	}
 	return 0;
+}
+
+static int hasChildren(TID parent) {
+	for (int i=0; i<MAX_TASKS; i++) {
+		if (tcb[i].name && tcb[i].parent == parent) {
+			return TRUE;
+		}
+	}
+	return FALSE;
 }
 
 // **********************************************************************
@@ -301,16 +309,20 @@ static int dispatcher() {
 		}
 
 		case S_BLOCKED:
+		case S_ZOMBIE:
 		{
-			// printf("\ntask %d is blocked", curTask);
 			break;
 		}
 
 		case S_EXIT:
 		{
-			if (curTask == 0) return -1;			// if CLI, then quit scheduler
-			// release resources and kill task
-			sysKillTask(curTask);					// kill current task
+			if (curTask == 0) {						// if CLI, then quit scheduler
+				return -1;
+			} else if (hasChildren(curTask)) {
+				tcb[curTask].state = S_ZOMBIE;
+			} else {
+				sysKillTask(curTask);				// kill current task
+			}
 			break;
 		}
 

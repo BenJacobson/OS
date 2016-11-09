@@ -107,6 +107,7 @@ void printTask(int taskID) {
 	else if (tcb[taskID].state == S_READY) my_printf("Ready");
 	else if (tcb[taskID].state == S_RUNNING) my_printf("Running");
 	else if (tcb[taskID].state == S_BLOCKED) my_printf("Blocked    %s", tcb[taskID].event->name);
+	else if (tcb[taskID].state == S_ZOMBIE) my_printf("Zombie");
 	else if (tcb[taskID].state == S_EXIT) my_printf("Exiting");
 }
 

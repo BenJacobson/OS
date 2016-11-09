@@ -55,7 +55,8 @@
 #define S_READY				1
 #define S_RUNNING			2
 #define S_BLOCKED			3
-#define S_EXIT				4
+#define S_ZOMBIE			4
+#define S_EXIT				5
 
 #define FALSE				0
 #define TRUE				1
