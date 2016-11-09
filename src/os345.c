@@ -218,7 +218,17 @@ static int scheduler() {
 
 
 static int fairShareScheduler() {
-	return -1;
+	//printPQueue(readyQueue);
+	TID nextTask = dequeueTask(readyQueue);
+	//printPQueue(readyQueue);
+	//printf("\nDequeued %d", nextTask);
+	if (nextTask == -1) {
+		for (int i=readyQueue[0]; i>0; i--) {
+			tcb[readyQueue[i]].timeLeft = 20;
+		}
+		return 0;
+	}
+	return nextTask;
 }
 
 // **********************************************************************

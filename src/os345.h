@@ -102,8 +102,9 @@ typedef struct							// task control block
 	int (*task)(int,char**);			// task address
 	int state;							// task state
 	Priority priority;					// task priority (project 2)
-	int timeSlice;						// task time slice
+	int timeSlice;						// task time slice (number of swaps before switch)
 	int timeSliceCount;					// task time slice count
+	int timeLeft;						// task number of swaps left for fair time
 	int argc;							// task argument count (project 1)
 	char** argv;						// task argument pointers (project 1)
 	int signal;							// task signals (project 1)

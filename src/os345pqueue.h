@@ -16,5 +16,6 @@ int enqueueTask(PQueue pqueue, TID taskID);
 TID dequeueTask(PQueue pqueue);
 void removeTask(PQueue pqueue, TID taskID);
 PQueue newPQueue(void);
+void printPQueue(PQueue pqueue);
 
 #endif//__os345pqueue_h__

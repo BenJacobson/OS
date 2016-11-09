@@ -76,6 +76,7 @@ int createTask(char* name,						// task name
 			tcb[tid].priority = priority;	// task priority
 			tcb[tid].timeSlice = timeSlice;	// time slices given
 			tcb[tid].timeSliceCount = 0;	// time slices used this swap
+			tcb[tid].timeLeft = 0;			// time left for task to run
 			tcb[tid].parent = curTask;		// parent
 			tcb[tid].argc = argc;			// argument count
 

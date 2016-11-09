@@ -19,11 +19,13 @@
 #include <setjmp.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "os345.h"
 #include "os345pqueue.h"
 
 extern TCB tcb[];
+extern int scheduler_mode;			// scheduler mode
 
 // **********************************************************************
 // **********************************************************************
@@ -56,10 +58,24 @@ int enqueueTask(PQueue pqueue, TID taskID) {
 // **********************************************************************
 // Dequeue Task
 TID dequeueTask(PQueue pqueue) {
-	if (pqueue[0])
-		return pqueue[pqueue[0]--];
-	else
+	if (pqueue[0] == 0) {
 		return -1;
+	} else if (scheduler_mode) {				// fair share
+		for (int i=pqueue[0]; i>0; i--) {
+			if (tcb[pqueue[i]].timeLeft) {
+				tcb[pqueue[i]].timeLeft--;
+				TID nextTask = pqueue[i];
+				for (int j=i; j<=pqueue[0]; j++) {
+					pqueue[j] = pqueue[j+1];
+				}
+				pqueue[0]--;
+				return nextTask;
+			}
+		}
+		return -1;
+	} else {									// round robin priority
+		return pqueue[pqueue[0]--];
+	}
 } // end dequeueTask
 
 // **********************************************************************
@@ -88,4 +104,15 @@ PQueue newPQueue() {
     PQueue pqueue = (PQueue)malloc(MAX_TASKS * sizeof(int));
 	pqueue[0] = 0;
 	return pqueue;
+} // end newPQueue
+
+// **********************************************************************
+// **********************************************************************
+// Print PQueue
+void printPQueue(PQueue pqueue) {
+	printf("\nPrinting Queue");
+    for (int i=pqueue[0]; i>0; i--) {
+		printf("\n%d", pqueue[i]);
+	}
+	printf("\nEnd");
 } // end newPQueue
