@@ -32,7 +32,7 @@
 #define STACK_SIZE			(64*1024/sizeof(int))
 #define MAX_CYCLES			CLOCKS_PER_SEC/2
 #define NUM_MESSAGES		500
-#define NUM_TIME_SLOTS		200
+#define NUM_TIME_SLOTS		1000
 #define INBUF_SIZE			256
 #define CMDBUF_SIZE			10
 #define MYPRINTFBUF_SIZE	100
