@@ -36,7 +36,7 @@
 //
 void pollInterrupts(void);
 static int scheduler(void);
-static int fairShareScheduler(void);
+static int createFairShareSchedule(void);
 static int dispatcher(void);
 int decDC(int argc, char* argv[]);
 int sysKillTask(int taskID);
@@ -68,7 +68,7 @@ jmp_buf k_context;						// context of kernel stack
 jmp_buf reset_context;					// context of kernel stack
 volatile void* temp;					// temp pointer used in dispatcher
 
-int scheduler_mode;						// scheduler mode
+int schedulerMode;						// scheduler mode
 int superMode;							// system mode
 int curTask;							// current task #
 long swapCount;							// number of re-schedule cycles
@@ -172,6 +172,7 @@ int main(int argc, char* argv[])
 
 	while(1)									// scheduling loop
 	{
+		for(int i=0; i<100000; i++);
 		// check for character / timer interrupts
 		pollInterrupts();
 
@@ -194,14 +195,14 @@ int main(int argc, char* argv[])
 // scheduler
 //
 static int scheduler() {
-	int nextTask;
-	if (scheduler_mode) {
-		nextTask = fairShareScheduler();
-	} else {
-		nextTask = dequeueTask(readyQueue);
+	int nextTask = dequeueTask(readyQueue, schedulerMode);
+	if (nextTask == -1) {
+		if (schedulerMode) {
+			nextTask = createFairShareSchedule();
+		} else {
+			return -1;
+		}
 	}
-	if (nextTask == -1)
-		return -1;
 
 	// Pause SIGSTOP tasks
 	if (tcb[nextTask].signal & mySIGSTOP) {
@@ -217,18 +218,11 @@ static int scheduler() {
 } // end scheduler
 
 
-static int fairShareScheduler() {
-	//printPQueue(readyQueue);
-	TID nextTask = dequeueTask(readyQueue);
-	//printPQueue(readyQueue);
-	//printf("\nDequeued %d", nextTask);
-	if (nextTask == -1) {
-		for (int i=readyQueue[0]; i>0; i--) {
-			tcb[readyQueue[i]].timeLeft = 20;
-		}
-		return 0;
+static int createFairShareSchedule() {
+	for (int i=readyQueue[0]; i>0; i--) {
+		tcb[readyQueue[i]].timeLeft = 20;
 	}
-	return nextTask;
+	return 0;
 }
 
 // **********************************************************************
@@ -428,7 +422,7 @@ static int initOS()
 	// reset system variables
 	curTask = 0;						// current task #
 	swapCount = 0;						// number of scheduler cycles
-	scheduler_mode = 0;					// default scheduler
+	schedulerMode = 0;					// default scheduler
 	inChar = 0;							// last entered character
 	charFlag = 0;						// 0 => buffered input
 	inBufIndx = 0;						// input pointer into input buffer

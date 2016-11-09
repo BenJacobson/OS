@@ -37,7 +37,7 @@ Semaphore* childALive;				// childALive semaphore
 Semaphore* parentDead;				// parent dead
 extern Semaphore* tics1sec;			// 1 second semaphore
 extern int curTask;					// current task #
-extern int scheduler_mode;			// scheduler mode
+extern int schedulerMode;			// scheduler mode
 long int group_count[NUM_PARENTS];	// parent group counters
 int num_siblings[NUM_PARENTS];		// number in each group
 
@@ -59,8 +59,8 @@ int P5_project5(int argc, char* argv[])		// project 5
 	// check if just changing scheduler mode
 	if (argc > 1)
 	{
-		scheduler_mode = atoi(argv[1]);
-		printf("\nScheduler Mode = %d (%s)", scheduler_mode, scheduler_mode ? "FSS" : "RR");
+		schedulerMode = atoi(argv[1]);
+		printf("\nScheduler Mode = %d (%s)", schedulerMode, schedulerMode ? "FSS" : "RR");
 		return 0;
 	}
 

@@ -49,7 +49,7 @@ void semSignal(Semaphore* s) {
 	// check semaphore type
 	if (s->type == BINARY) {
 		int taskID;
-		if ((taskID = dequeueTask(s->blockedQueue)) >= 0) {
+		if ((taskID = dequeueTask(s->blockedQueue, FALSE)) >= 0) {
 			s->state = 0;						// clear semaphore
 			tcb[taskID].event = 0;				// clear event pointer
 			if (tcb[taskID].state == S_BLOCKED)
@@ -66,7 +66,7 @@ void semSignal(Semaphore* s) {
 		// counting semaphore
 		(s->state)++;							// clear semaphore		
 		int taskID;
-		if ((taskID = dequeueTask(s->blockedQueue)) >= 0) {
+		if ((taskID = dequeueTask(s->blockedQueue, FALSE)) >= 0) {
 			tcb[taskID].event = 0;				// clear event pointer
 			if (tcb[taskID].state == S_BLOCKED)
 				tcb[taskID].state = S_READY;		// unblock task

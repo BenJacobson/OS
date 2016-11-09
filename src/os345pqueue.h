@@ -13,7 +13,7 @@ typedef int* PQueue;					// Priority Queue
 // ***********************************************************************
 // PQueue prototypes
 int enqueueTask(PQueue pqueue, TID taskID);
-TID dequeueTask(PQueue pqueue);
+TID dequeueTask(PQueue pqueue, int useFairSchedule);
 void removeTask(PQueue pqueue, TID taskID);
 PQueue newPQueue(void);
 void printPQueue(PQueue pqueue);

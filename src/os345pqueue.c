@@ -25,7 +25,6 @@
 #include "os345pqueue.h"
 
 extern TCB tcb[];
-extern int scheduler_mode;			// scheduler mode
 
 // **********************************************************************
 // **********************************************************************
@@ -57,10 +56,10 @@ int enqueueTask(PQueue pqueue, TID taskID) {
 // **********************************************************************
 // **********************************************************************
 // Dequeue Task
-TID dequeueTask(PQueue pqueue) {
+TID dequeueTask(PQueue pqueue, int useFairSchedule) {
 	if (pqueue[0] == 0) {
 		return -1;
-	} else if (scheduler_mode) {				// fair share
+	} else if (useFairSchedule) {				// fair share
 		for (int i=pqueue[0]; i>0; i--) {
 			if (tcb[pqueue[i]].timeLeft) {
 				tcb[pqueue[i]].timeLeft--;
