@@ -9,3 +9,8 @@ Faults          483     932     2439    238076  12163    35812    160345   45956
 Page Reads      28      477     1984    237621  11427    35076    159609   4594872
 Page Writes     163     756     1221    120693  6829     25841    70133    2527646
 Swap Pages      163     444     453     455     721      729      735      736
+
+Todo
+    clean up zombies once children exit
+    allow execution to start with FSS mode
+    

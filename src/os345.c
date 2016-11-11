@@ -216,42 +216,6 @@ static int scheduler() {
 	return nextTask;
 } // end scheduler
 
-
-static int createFairShareSchedule(TID parent, int numTimeSlots) {
-	// printf("\n Task %d sorts %d", parent, numTimeSlots);
-	if (!numTimeSlots)
-		return 0;
-	int parentReady = (tcb[parent].state == S_READY);
-	int numChildren = 0;
-	for (int i=0; i<MAX_TASKS; i++) {
-		numChildren += (i != parent && tcb[i].name && tcb[i].parent == parent);
-	}
-	int shares = numChildren + parentReady;
-	// printf("\n Task %d shares %d ways", parent, shares);
-	if (shares) {
-		int fairShare = numTimeSlots / shares;
-		int extra = numTimeSlots % shares;
-		if (numChildren) {
-			for (int i=0; i<MAX_TASKS; i++) {
-				if (i != parent && tcb[i].name && tcb[i].parent == parent) {
-					createFairShareSchedule(i, fairShare);
-				}
-			}
-		}
-		if (parentReady) {
-			tcb[parent].timeLeft += fairShare + extra;
-			// printf("\n Task %d gets %d = %d + %d", parent, tcb[parent].timeLeft, fairShare, (numTimeSlots % fairShare));
-		} else if (numChildren) {
-			for (int i=0; i<MAX_TASKS; i++) {
-				if (i != parent && tcb[i].name && tcb[i].parent == parent) {
-					createFairShareSchedule(i, extra);
-				}
-			}
-		}
-	}
-	return 0;
-}
-
 static int hasChildren(TID parent) {
 	for (int i=0; i<MAX_TASKS; i++) {
 		if (tcb[i].name && tcb[i].parent == parent) {
