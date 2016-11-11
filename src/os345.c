@@ -188,6 +188,41 @@ int main(int argc, char* argv[])
 	return 0;
 } // end main
 
+static int createFairShareSchedule(TID parent, int numTimeSlots) {
+	// printf("\n Task %d sorts %d", parent, numTimeSlots);
+	if (!numTimeSlots)
+		return 0;
+	int parentReady = (tcb[parent].state != S_BLOCKED && tcb[parent].state != S_ZOMBIE);
+	int numChildren = 0;
+	for (int i=0; i<MAX_TASKS; i++) {
+		numChildren += (i != parent && tcb[i].name && tcb[i].parent == parent);
+	}
+	int shares = numChildren + parentReady;
+	// printf("\n Task %d shares %d ways", parent, shares);
+	if (shares) {
+		int fairShare = numTimeSlots / shares;
+		int extra = numTimeSlots % shares;
+		if (numChildren) {
+			for (int i=0; i<MAX_TASKS; i++) {
+				if (i != parent && tcb[i].name && tcb[i].parent == parent) {
+					createFairShareSchedule(i, fairShare);
+				}
+			}
+		}
+		if (parentReady) {
+			tcb[parent].timeLeft += fairShare + extra;
+			// printf("\n Task %d gets %d = %d + %d", parent, tcb[parent].timeLeft, fairShare, (numTimeSlots % fairShare));
+		} else if (numChildren) {
+			for (int i=0; i<MAX_TASKS; i++) {
+				if (i != parent && tcb[i].name && tcb[i].parent == parent) {
+					createFairShareSchedule(i, extra);
+					break;
+				}
+			}
+		}
+	}
+	return 0;
+}
 
 
 // **********************************************************************
