@@ -89,10 +89,11 @@ extern int curTask;							// current task #
 //
 int fmsCloseFile(int fileDescriptor)
 {
-	// ?? add code here
-	printf("\nfmsCloseFile Not Implemented");
-
-	return ERR63;
+	FDEntry* fdEntry = &OFTable[fileDescriptor];
+	if (fdEntry->name[0] == 0)
+		return ERR63;
+	fdEntry->name[0] = 0;
+	return 0;
 } // end fmsCloseFile
 
 
@@ -222,7 +223,7 @@ int fmsReadFile(int fileDescriptor, char* buffer, int nBytes)
 		bufferIndex = fdEntry->fileIndex % BYTES_PER_SECTOR;
 		if ((bufferIndex == 0) && (fdEntry->fileIndex || !fdEntry->currentCluster)) {
 			if (fdEntry->currentCluster == 0) {
-				if (fdEntry->startCluster) return ERR66;
+				// if (fdEntry->startCluster) return ERR66;
 				nextCluster = fdEntry->startCluster;
 				fdEntry->fileIndex = 0;
 			} else {
