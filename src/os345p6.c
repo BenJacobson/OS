@@ -275,7 +275,7 @@ int P6_mount(int argc, char* argv[])		// mount RAM disk
 
 	assert("64-bit" && (sizeof(DirEntry) == 32));
 
-	if (argc < 2) strcat(temp, "c:/lcc/projects/disk4");
+	if (argc < 2) strcat(temp, "disk4");
 		else strcat(temp, argv[1]);
 	printf("\nMount Disk \"%s\"", temp);
 

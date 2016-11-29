@@ -161,12 +161,38 @@ int fmsDeleteFile(char* fileName)
 // If successful, return a file descriptor that is used in calling subsequent file
 // handling functions; otherwise, return the error number.
 //
-int fmsOpenFile(char* fileName, int rwMode)
-{
-	// ?? add code here
-	printf("\nfmsOpenFile Not Implemented");
-
-	return ERR61;
+int fmsOpenFile(char* fileName, int rwMode) {
+	int index = 0;
+	DirEntry dirEntry;
+	int error = 0;
+	int fileDescriptor = ERR70;		// too many files open
+	// look for the file in current directory
+	error = fmsGetNextDirEntry(&index, fileName, &dirEntry, CDIR);
+	if (error) return error;
+	// find a free file descriptior
+	for (int i = 0; i < NFILES; i++) {
+		if (OFTable[i].name[0] == 0) {
+			fileDescriptor = i;
+			break;
+		}
+	}
+	if (fileDescriptor < 0)
+		return fileDescriptor;		// too many files open error
+	// init FDEntry struct
+	FDEntry* fdEntry = &OFTable[fileDescriptor];
+	memcpy(&fdEntry->name, &dirEntry.name, 8);
+	memcpy(&fdEntry->extension, &dirEntry.extension, 3);
+	fdEntry->attributes = dirEntry.attributes;
+	fdEntry->directoryCluster = CDIR;
+	fdEntry->startCluster = dirEntry.startCluster;
+	fdEntry->currentCluster = 0;
+	fdEntry->fileSize = dirEntry.fileSize;
+	fdEntry->pid = curTask;
+	fdEntry->mode = rwMode;
+	fdEntry->flags = 0;
+	fdEntry->fileIndex = rwMode == 2 ? dirEntry.fileSize : 0;
+	memset(&fdEntry->buffer, 0, BYTES_PER_SECTOR);
+	return fileDescriptor;
 } // end fmsOpenFile
 
 
@@ -183,10 +209,46 @@ int fmsOpenFile(char* fileName, int rwMode)
 //
 int fmsReadFile(int fileDescriptor, char* buffer, int nBytes)
 {
-	// ?? add code here
-	printf("\nfmsReadFile Not Implemented");
-
-	return ERR63;
+	int error, nextCluster;
+	FDEntry* fdEntry;
+	int numBytesRead = 0;
+	unsigned int bytesLeft, bufferIndex;
+	fdEntry = &OFTable[fileDescriptor];
+	if (fdEntry->name[0] == 0) return ERR63;
+	if ((fdEntry->mode == 1) || (fdEntry->mode == 2)) return ERR85;
+	while (nBytes > 0) {
+		if (fdEntry->fileSize == fdEntry->fileIndex)
+			return numBytesRead ? numBytesRead : ERR66;
+		bufferIndex = fdEntry->fileIndex % BYTES_PER_SECTOR;
+		if ((bufferIndex == 0) && (fdEntry->fileIndex || !fdEntry->currentCluster)) {
+			if (fdEntry->currentCluster == 0) {
+				if (fdEntry->startCluster) return ERR66;
+				nextCluster = fdEntry->startCluster;
+				fdEntry->fileIndex = 0;
+			} else {
+				nextCluster = getFatEntry(fdEntry->currentCluster, FAT1);
+				if (nextCluster == FAT_EOC) return numBytesRead;
+			}
+			if (fdEntry->flags && BUFFER_ALTERED) {
+				if ((error = fmsWriteSector(fdEntry->buffer,
+					C_2_S(fdEntry->currentCluster)))) return error;
+				fdEntry->flags &= ~BUFFER_ALTERED;
+			}
+			if ((error = fmsReadSector(fdEntry->buffer, C_2_S(nextCluster))))
+				return error;
+			fdEntry->currentCluster = nextCluster;
+		}
+		bytesLeft = BYTES_PER_SECTOR - bufferIndex;
+		if (bytesLeft > nBytes) bytesLeft = nBytes;
+		if (bytesLeft > (fdEntry->fileSize - fdEntry->fileIndex))
+			bytesLeft = fdEntry->fileSize - fdEntry->fileIndex;
+		memcpy(buffer, &fdEntry->buffer[bufferIndex], bytesLeft);
+		fdEntry->fileIndex += bytesLeft;
+		numBytesRead += bytesLeft;
+		buffer += bytesLeft;
+		nBytes -= bytesLeft;
+	}
+	return numBytesRead;
 } // end fmsReadFile
 
 
