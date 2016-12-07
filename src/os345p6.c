@@ -1640,7 +1640,39 @@ int fmsMask(char* mask, char* name, char* ext)
    return 1;
 } // end fmsMask
 
+int fmsUpdateFileSize(char* fileName, int size) {
+    int error, index = 0;
+	DirEntry dirEntry, *dirEntryPtr;
+    error = fmsGetNextDirEntry(&index, fileName, &dirEntry, CDIR);
+	if (error) {
+		return (error == ERR67) ? ERR61 : error;
+	}
+	index -= 1;
 
+	int loop = index / ENTRIES_PER_SECTOR;
+	int dirCluster = CDIR, dirSector;
+	int dirIndex = index % ENTRIES_PER_SECTOR;
+	char buffer[BYTES_PER_SECTOR];
+	
+	if (CDIR) {	// sub directory
+		while(loop--) {
+			dirCluster = getFatEntry(dirCluster, FAT1);
+			if (dirCluster == FAT_EOC) return ERR67;
+			if (dirCluster == FAT_BAD) return ERR54;
+			if (dirCluster < 2) return ERR54;
+		}
+		dirSector = C_2_S(dirCluster);
+	} else {	// root directory
+		dirSector = (index / ENTRIES_PER_SECTOR) + BEG_ROOT_SECTOR;
+		if (dirSector >= BEG_DATA_SECTOR) return ERR67;
+	}
+
+	if (error = fmsReadSector(buffer, dirSector)) return error;	
+	dirEntryPtr = (DirEntry*) &buffer[dirIndex * sizeof(DirEntry)];
+	printf("%s Current Size: %d\n\r", fileName, dirEntryPtr->fileSize);
+	dirEntryPtr->fileSize = size;
+	fmsWriteSector(buffer, dirSector);
+}
 
 // ***************************************************************************************
 // ***************************************************************************************
@@ -1651,9 +1683,9 @@ int fmsGetDirEntry(char* fileName, DirEntry* dirEntry)
 //
 //    ERR61 = File Not Defined
 {
-   int error, index = 0;
-	//if (isValidFileName(fileName) < 1) return ERR50;
-   error = fmsGetNextDirEntry(&index, fileName, dirEntry, CDIR);
+    int error, index = 0;
+	// if (isValidFileName(fileName) < 1) return ERR50;
+    error = fmsGetNextDirEntry(&index, fileName, dirEntry, CDIR);
 	return (error ? ((error == ERR67) ? ERR61 : error) : 0);
 } // end fmsGetDirEntry
 
@@ -1709,8 +1741,7 @@ int fmsGetNextDirEntry(int *dirNum, char* mask, DirEntry* dirEntry, int dir)
 		if (error = fmsReadSector(buffer, dirSector)) return error;
 
 		// find next matching directory entry
-		while(1)
-		{	// read directory entry
+		while(1) {	// read directory entry
 			dirIndex = *dirNum % ENTRIES_PER_SECTOR;
 			memcpy(dirEntry, &buffer[dirIndex * sizeof(DirEntry)], sizeof(DirEntry));
 			if (dirEntry->name[0] == 0) return ERR67;	// EOD
@@ -1903,10 +1934,9 @@ void setFatEntry(int FATindex, unsigned short FAT12ClusEntryVal, unsigned char* 
 
 
 // ***************************************************************************************
-// ***************************************************************************************
 // Replace the 12-bit FAT entry code in the unsigned char FAT table at index
-unsigned short getFatEntry(int FATindex, unsigned char* FATtable)
-{
+// ***************************************************************************************
+unsigned short getFatEntry(int FATindex, unsigned char* FATtable) {
 	unsigned short FATEntryCode;    			// The return value
 	int FatOffset = ((FATindex * 3) / 2);	// Calculate the offset of the unsigned short to get
 	if ((FATindex % 2) == 1)    				// If the index is odd
@@ -1924,6 +1954,17 @@ unsigned short getFatEntry(int FATindex, unsigned char* FATtable)
       FATEntryCode &= 0x0fff;    			// Extract the low-order 12 bits
 	}
 	return FATEntryCode;
+} // end GetFatEntry
+
+unsigned short getNewFatEntry(unsigned char* FATtable) {
+	unsigned short FATEntryCode;    			// The return value
+	for (int i = 0; i < CLUSTERS_PER_DISK; i++) {
+		FATEntryCode = getFatEntry(i, FATtable);
+		if (FATEntryCode == 0) {
+			return i;
+		}
+	}
+	return ERR65;
 } // end GetFatEntry
 
 // ***************************************************************************************

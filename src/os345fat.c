@@ -47,11 +47,14 @@ int fmsWriteFile(int, char*, int);
 //
 extern int fmsGetDirEntry(char* fileName, DirEntry* dirEntry);
 extern int fmsGetNextDirEntry(int *dirNum, char* mask, DirEntry* dirEntry, int dir);
+extern int fmsUpdateFileSize(char* fileName, int size);
 
 extern int fmsMount(char* fileName, void* ramDisk);
 
 extern void setFatEntry(int FATindex, unsigned short FAT12ClusEntryVal, unsigned char* FAT);
 extern unsigned short getFatEntry(int FATindex, unsigned char* FATtable);
+extern unsigned short getNewFatEntry(unsigned char* FATtable);
+
 
 extern int fmsMask(char* mask, char* name, char* ext);
 extern void setDirTimeDate(DirEntry* dir);
@@ -114,12 +117,16 @@ int fmsCloseFile(int fileDescriptor)
 //
 // Return 0 for success, otherwise, return the error number.
 //
-int fmsDefineFile(char* fileName, int attribute)
-{
-	// ?? add code here
-	printf("\nfmsDefineFile Not Implemented");
-
-	return ERR72;
+int fmsDefineFile(char* fileName, int attribute) {
+	// create directory or file ?
+	if (attribute == DIRECTORY)  {
+		// get a new cluster
+		// init the cluster as directory
+		// add the new directory to the current directory
+	} else {
+		// find an empty entry
+		// init the entry
+	}
 } // end fmsDefineFile
 
 
@@ -163,12 +170,11 @@ int fmsDeleteFile(char* fileName)
 // handling functions; otherwise, return the error number.
 //
 int fmsOpenFile(char* fileName, int rwMode) {
-	int index = 0;
 	DirEntry dirEntry;
 	int error = 0;
 	int fileDescriptor = ERR70;		// too many files open
 	// look for the file in current directory
-	error = fmsGetNextDirEntry(&index, fileName, &dirEntry, CDIR);
+	error = fmsGetDirEntry(fileName, &dirEntry);
 	if (error) return error;
 	// find a free file descriptior
 	for (int i = 0; i < NFILES; i++) {
@@ -208,15 +214,14 @@ int fmsOpenFile(char* fileName, int rwMode) {
 // (If you are already at the end of the file, return EOF error.  ie. you should never
 // return a 0.)
 //
-int fmsReadFile(int fileDescriptor, char* buffer, int nBytes)
-{
+int fmsReadFile(int fileDescriptor, char* buffer, int nBytes) {
 	int error, nextCluster;
 	FDEntry* fdEntry;
 	int numBytesRead = 0;
 	unsigned int bytesLeft, bufferIndex;
 	fdEntry = &OFTable[fileDescriptor];
 	if (fdEntry->name[0] == 0) return ERR63;
-	if ((fdEntry->mode == 1) || (fdEntry->mode == 2)) return ERR85;
+	if ((fdEntry->mode == OPEN_WRITE) || (fdEntry->mode == OPEN_APPEND)) return ERR85;
 	while (nBytes > 0) {
 		if (fdEntry->fileSize == fdEntry->fileIndex)
 			return numBytesRead ? numBytesRead : ERR66;
@@ -281,10 +286,55 @@ int fmsSeekFile(int fileDescriptor, int index)
 // from the current file pointer position.
 // Return the number of bytes successfully written; otherwise, return the error number.
 //
-int fmsWriteFile(int fileDescriptor, char* buffer, int nBytes)
-{
-	// ?? add code here
-	printf("\nfmsWriteFile Not Implemented");
-
-	return ERR63;
+int fmsWriteFile(int fileDescriptor, char* buffer, int nBytes) {
+	int error, nextCluster;
+	FDEntry* fdEntry;
+	int numBytesWritten = 0;
+	unsigned int bytesLeft, bufferIndex;
+	fdEntry = &OFTable[fileDescriptor];
+	if (fdEntry->name[0] == 0) return ERR63;
+	if (fdEntry->mode == OPEN_READ) return ERR85;
+	while (nBytes > 0) {
+		bufferIndex = fdEntry->fileIndex % BYTES_PER_SECTOR;
+		if (fdEntry->fileSize == fdEntry->fileIndex) {
+			bytesLeft = BYTES_PER_SECTOR - bufferIndex;
+			if (bytesLeft > nBytes)
+				bytesLeft = nBytes;
+			fdEntry->fileSize += bytesLeft;
+		}
+		if ((bufferIndex == 0) && (fdEntry->fileIndex || !fdEntry->currentCluster)) {
+			if (fdEntry->currentCluster == 0) {
+				// if (fdEntry->startCluster) return ERR66;
+				nextCluster = fdEntry->startCluster;
+				fdEntry->fileIndex = 0;
+				// delete file and its clusters
+			} else {
+				nextCluster = getFatEntry(fdEntry->currentCluster, FAT1);
+				if (nextCluster == FAT_EOC) {
+					nextCluster = getNewFatEntry(FAT1);
+					if (nextCluster == FAT_EOC) return ERR65;
+					setFatEntry(fdEntry->currentCluster, nextCluster, FAT1);
+					setFatEntry(nextCluster, FAT_EOC, FAT1);
+				}
+			}
+			if ((error = fmsReadSector(fdEntry->buffer, C_2_S(nextCluster))))
+				return error;
+			fdEntry->currentCluster = nextCluster;
+		}
+		bytesLeft = BYTES_PER_SECTOR - bufferIndex;
+		if (bytesLeft > nBytes)
+			bytesLeft = nBytes;
+		if (bytesLeft > (fdEntry->fileSize - fdEntry->fileIndex))
+			bytesLeft = fdEntry->fileSize - fdEntry->fileIndex;
+		memcpy(&fdEntry->buffer[bufferIndex], buffer, bytesLeft);
+		if ((error = fmsWriteSector(fdEntry->buffer,
+					C_2_S(fdEntry->currentCluster)))) return error;
+		fdEntry->fileIndex += bytesLeft;
+		numBytesWritten += bytesLeft;
+		buffer += bytesLeft;
+		nBytes -= bytesLeft;
+	}
+	// update file size
+	fmsUpdateFileSize(fdEntry->name, fdEntry->fileSize);
+	return numBytesWritten;
 } // end fmsWriteFile
