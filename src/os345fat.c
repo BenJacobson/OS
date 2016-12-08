@@ -51,6 +51,8 @@ extern int fmsUpdateFileSize(char* fileName, int size);
 
 extern int fmsMount(char* fileName, void* ramDisk);
 
+extern void freeClusterChain(int FATindex, unsigned char* FATtable);
+unsigned short getLastCluster(int FATindex, unsigned char* FATtable);
 extern void setFatEntry(int FATindex, unsigned short FAT12ClusEntryVal, unsigned char* FAT);
 extern unsigned short getFatEntry(int FATindex, unsigned char* FATtable);
 extern unsigned short getNewFatEntry(unsigned char* FATtable);
@@ -197,7 +199,7 @@ int fmsOpenFile(char* fileName, int rwMode) {
 	fdEntry->pid = curTask;
 	fdEntry->mode = rwMode;
 	fdEntry->flags = 0;
-	fdEntry->fileIndex = rwMode == 2 ? dirEntry.fileSize : 0;
+	fdEntry->fileIndex = 0;
 	memset(&fdEntry->buffer, 0, BYTES_PER_SECTOR);
 	return fileDescriptor;
 } // end fmsOpenFile
@@ -221,7 +223,7 @@ int fmsReadFile(int fileDescriptor, char* buffer, int nBytes) {
 	unsigned int bytesLeft, bufferIndex;
 	fdEntry = &OFTable[fileDescriptor];
 	if (fdEntry->name[0] == 0) return ERR63;
-	if ((fdEntry->mode == OPEN_WRITE) || (fdEntry->mode == OPEN_APPEND)) return ERR85;
+	if (!((fdEntry->mode == OPEN_READ) || (fdEntry->mode == OPEN_RDWR))) return ERR85;	
 	while (nBytes > 0) {
 		if (fdEntry->fileSize == fdEntry->fileIndex)
 			return numBytesRead ? numBytesRead : ERR66;
@@ -269,10 +271,32 @@ int fmsReadFile(int fileDescriptor, char* buffer, int nBytes) {
 //
 int fmsSeekFile(int fileDescriptor, int index)
 {
-	// ?? add code here
-	printf("\nfmsSeekFile Not Implemented");
+	FDEntry* fdEntry = &OFTable[fileDescriptor];
+	if (!((fdEntry->mode == OPEN_READ) || (fdEntry->mode == OPEN_RDWR))) return ERR85;	
+	if (index >= fdEntry->fileSize) return ERR80;
 
-	return ERR63;
+	int loop = index / ENTRIES_PER_SECTOR;
+	int dirCluster = CDIR, dirSector;
+	int error;
+	
+	if (CDIR) {	// sub directory
+		while(loop--) {
+			dirCluster = getFatEntry(dirCluster, FAT1);
+			if (dirCluster == FAT_EOC) return ERR67;
+			if (dirCluster == FAT_BAD) return ERR54;
+			if (dirCluster < 2) return ERR54;
+		}
+		dirSector = C_2_S(dirCluster);
+	} else {	// root directory
+		dirSector = (index / ENTRIES_PER_SECTOR) + BEG_ROOT_SECTOR;
+		if (dirSector >= BEG_DATA_SECTOR) return ERR67;
+	}
+
+	if (error = fmsReadSector(fdEntry->buffer, dirSector)) return error;	
+
+	fdEntry->currentCluster = dirCluster;
+	fdEntry->fileIndex = index;
+	return index;
 } // end fmsSeekFile
 
 
@@ -293,7 +317,7 @@ int fmsWriteFile(int fileDescriptor, char* buffer, int nBytes) {
 	unsigned int bytesLeft, bufferIndex;
 	fdEntry = &OFTable[fileDescriptor];
 	if (fdEntry->name[0] == 0) return ERR63;
-	if (fdEntry->mode == OPEN_READ) return ERR85;
+	if (!((fdEntry->mode == OPEN_WRITE) || (fdEntry->mode == OPEN_APPEND) || (fdEntry->mode == OPEN_RDWR))) return ERR85;
 	while (nBytes > 0) {
 		bufferIndex = fdEntry->fileIndex % BYTES_PER_SECTOR;
 		if (fdEntry->fileSize == fdEntry->fileIndex) {
@@ -304,10 +328,18 @@ int fmsWriteFile(int fileDescriptor, char* buffer, int nBytes) {
 		}
 		if ((bufferIndex == 0) && (fdEntry->fileIndex || !fdEntry->currentCluster)) {
 			if (fdEntry->currentCluster == 0) {
-				// if (fdEntry->startCluster) return ERR66;
-				nextCluster = fdEntry->startCluster;
-				fdEntry->fileIndex = 0;
-				// delete file and its clusters
+				if (fdEntry->mode == OPEN_WRITE) {
+					nextCluster = fdEntry->startCluster;
+					freeClusterChain(nextCluster, FAT1);
+					setFatEntry(nextCluster, FAT_EOC, FAT1);
+					fdEntry->fileSize = 0;
+				} else if (fdEntry->mode == OPEN_APPEND) {
+					nextCluster = getLastCluster(fdEntry->startCluster, FAT1);
+					fdEntry->fileIndex = fdEntry->fileSize;
+					bufferIndex = fdEntry->fileIndex % BYTES_PER_SECTOR;
+				} else if (fdEntry->mode == OPEN_RDWR) {
+					nextCluster = fdEntry->startCluster;
+				}
 			} else {
 				nextCluster = getFatEntry(fdEntry->currentCluster, FAT1);
 				if (nextCluster == FAT_EOC) {
@@ -330,6 +362,8 @@ int fmsWriteFile(int fileDescriptor, char* buffer, int nBytes) {
 		if ((error = fmsWriteSector(fdEntry->buffer,
 					C_2_S(fdEntry->currentCluster)))) return error;
 		fdEntry->fileIndex += bytesLeft;
+		if (fdEntry->fileSize == 0)
+			fdEntry->fileSize +=bytesLeft;
 		numBytesWritten += bytesLeft;
 		buffer += bytesLeft;
 		nBytes -= bytesLeft;

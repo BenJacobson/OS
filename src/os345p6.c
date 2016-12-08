@@ -1647,7 +1647,7 @@ int fmsUpdateFileSize(char* fileName, int size) {
 	if (error) {
 		return (error == ERR67) ? ERR61 : error;
 	}
-	index -= 1;
+	index--;
 
 	int loop = index / ENTRIES_PER_SECTOR;
 	int dirCluster = CDIR, dirSector;
@@ -1669,7 +1669,6 @@ int fmsUpdateFileSize(char* fileName, int size) {
 
 	if (error = fmsReadSector(buffer, dirSector)) return error;	
 	dirEntryPtr = (DirEntry*) &buffer[dirIndex * sizeof(DirEntry)];
-	printf("%s Current Size: %d\n\r", fileName, dirEntryPtr->fileSize);
 	dirEntryPtr->fileSize = size;
 	fmsWriteSector(buffer, dirSector);
 }
@@ -1907,7 +1906,33 @@ int fmsWriteSector(void* buffer, int sectorNumber)
 	return 0;
 } // end fmsWriteSector
 
+void freeClusterChain(int FATindex, unsigned char* FATtable) {
+	if (FATindex = FAT_EOC)
+		return;
+	freeClusterChain(getFatEntry(FATindex, FATtable), FATtable);
+	setFatEntry(FATindex, 0, FATtable);
+}
 
+unsigned short getLastCluster(int FATindex, unsigned char* FATtable) {
+	unsigned short nextCluster = getFatEntry(FATindex, FATtable);
+	if (nextCluster == FAT_EOC) {
+		return FATindex;
+	} else {
+		return getLastCluster(nextCluster, FATtable);
+	}
+}
+
+// if Ben makes dessert
+// 	switch megans dessert preference
+// 		case ice cream:
+// 			make ice cream
+// 			break;
+// 		case cookies:
+// 			make cookies
+// 			break;
+// 		default:
+// 			brownies
+// 	return Megan eats it
 
 // ***************************************************************************************
 // Take a FAT table index and return an unsigned short containing the 12-bit FAT entry code
@@ -1921,7 +1946,7 @@ void setFatEntry(int FATindex, unsigned short FAT12ClusEntryVal, unsigned char* 
 	{	FAT12ClusEntryVal &= 0x0FFF;			// mask to 12 bits
 	FATData &= 0xF000;							// mask complement
 	}
-	else												// Index is odd
+	else										// Index is odd
 	{	FAT12ClusEntryVal <<= 4; 				// move 12-bits high
 		FATData &= 0x000F;						// mask complement
 	}
