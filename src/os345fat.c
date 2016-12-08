@@ -48,6 +48,7 @@ int fmsWriteFile(int, char*, int);
 extern int fmsGetDirEntry(char* fileName, DirEntry* dirEntry);
 extern int fmsGetNextDirEntry(int *dirNum, char* mask, DirEntry* dirEntry, int dir);
 extern int fmsUpdateFileSize(char* fileName, int size);
+int fmsAddDirEntry(DirEntry* dirEntry);
 
 extern int fmsMount(char* fileName, void* ramDisk);
 
@@ -121,6 +122,7 @@ int fmsCloseFile(int fileDescriptor)
 //
 int fmsDefineFile(char* fileName, int attribute) {
 	// create directory or file ?
+	int i, j;
 	if (attribute == DIRECTORY)  {
 		// get a new cluster
 		// init the cluster as directory
@@ -128,6 +130,21 @@ int fmsDefineFile(char* fileName, int attribute) {
 	} else {
 		// find an empty entry
 		// init the entry
+		if (!isValidFileName(fileName)) return ERR50;
+		DirEntry dirEntry;
+		memset(&dirEntry, ' ', sizeof(dirEntry.name) + sizeof(dirEntry.extension));
+		for (i=0; fileName[i] != '.'; i++) {
+			dirEntry.name[i] = fileName[i];
+		}
+		for (j=0, i++; fileName[i+j] != '\0'; j++) {
+			dirEntry.extension[j] = fileName[i+j];
+		}
+		dirEntry.attributes = attribute;
+		// dirEntry.reserved = 0;
+		setDirTimeDate(&dirEntry);
+		dirEntry.startCluster = 0;
+		dirEntry.fileSize = 0;		
+		return fmsAddDirEntry(&dirEntry);
 	}
 } // end fmsDefineFile
 

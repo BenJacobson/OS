@@ -75,8 +75,8 @@ int sectorReads;
 int sectorWrites;
 
 // ***********************************************************************
-// project 6 functions and tasks
-
+// funstion prototypes
+unsigned short getNewFatEntry(unsigned char* FATtable);
 
 // ***********************************************************************
 // ***********************************************************************
@@ -1671,6 +1671,57 @@ int fmsUpdateFileSize(char* fileName, int size) {
 	dirEntryPtr = (DirEntry*) &buffer[dirIndex * sizeof(DirEntry)];
 	dirEntryPtr->fileSize = size;
 	fmsWriteSector(buffer, dirSector);
+}
+
+int fmsAddDirEntry(DirEntry* newDirEntry) {
+	char buffer[BYTES_PER_SECTOR];
+	int dirIndex, dirSector, error;
+	int dirCluster = CDIR, dirClusterTemp, dirClusterNumber = 0;;
+	int loop = 0;
+	DirEntry dirEntryTemp;
+
+	while(1)
+	{	// load directory sector
+		if (CDIR)
+		{	// sub directory
+			if (loop) {
+				dirClusterTemp = getFatEntry(dirCluster, FAT1);
+				if (dirClusterTemp == FAT_EOC) {			// get new cluster for the directory
+					dirClusterTemp = getNewFatEntry(FAT1);
+					if (dirClusterTemp < 0) return dirClusterTemp;
+					setFatEntry(dirCluster, dirClusterTemp, FAT1);
+				}
+				if (dirCluster == FAT_BAD) return ERR54;
+				if (dirCluster < 2) return ERR54;
+				dirCluster = dirClusterTemp;
+			}
+			dirSector = C_2_S(dirCluster);
+		}
+		else
+		{	// root directory
+			dirSector = (dirClusterNumber / ENTRIES_PER_SECTOR) + BEG_ROOT_SECTOR;
+			if (dirSector >= BEG_DATA_SECTOR) return ERR67;
+		}
+
+		// read sector into directory buffer
+		if (error = fmsReadSector(buffer, dirSector)) return error;
+
+		// find next matching directory entry
+		while(1) {	// read directory entry
+			dirIndex = dirClusterNumber % ENTRIES_PER_SECTOR;
+			memcpy(&dirEntryTemp, &buffer[dirIndex * sizeof(DirEntry)], sizeof(DirEntry));
+			if (dirEntryTemp.name[0] == 0 || dirEntryTemp.name[0] == 0xe5) {		// free slot
+				memcpy(&buffer[dirIndex * sizeof(DirEntry)], newDirEntry, sizeof(DirEntry));
+
+				return fmsWriteSector(buffer, dirSector);
+			}
+			// break if sector boundary
+			dirClusterNumber++;                        		// prepare for next read
+			if ((dirClusterNumber % ENTRIES_PER_SECTOR) == 0) break;
+		}
+		loop = 1;
+   }
+   return UNDEFINED;
 }
 
 // ***************************************************************************************
